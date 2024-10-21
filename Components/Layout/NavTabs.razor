@@ -1,0 +1,34 @@
+<MudGrid Spacing="20" Justify="Justify.Center">
+  <MudItem>
+    <MudButton Variant="Variant.Filled" DropShadow="false" Ripple="false" StartIcon="@Icons.Material.TwoTone.PushPin"
+      Color="@(Selected == Tab.Pinned ? Color.Secondary : Color.Primary)"
+      Style="@(Selected == Tab.Pinned ? @GlowStyle : null)" Href="/pinned">
+      Pinned
+    </MudButton>
+  </MudItem>
+
+  <MudItem>
+    <MudButton Variant="Variant.Filled" DropShadow="false" Ripple="false"
+      StartIcon="@Icons.Material.TwoTone.CalendarMonth"
+      Color="@(Selected == Tab.Plans ? Color.Secondary : Color.Primary)"
+      Style="@(Selected == Tab.Plans ? @GlowStyle : null)" Href="/plans">
+      Plans
+    </MudButton>
+  </MudItem>
+
+  <MudItem>
+    <MudButton Variant="Variant.Filled" DropShadow="false" Ripple="false" StartIcon="@Icons.Material.TwoTone.Add"
+      Color="@(Selected == Tab.New ? Color.Secondary : Color.Primary)"
+      Style="@(Selected == Tab.New ? @GlowStyle : null)" Href="/new">
+      New
+    </MudButton>
+  </MudItem>
+</MudGrid>
+
+@code {
+  [Parameter, EditorRequired]
+  public Tab Selected { get; set; }
+
+  private string GlowStyle = "filter: drop-shadow(0 0 0.3rem var(--mud-palette-secondary));";
+  
+}

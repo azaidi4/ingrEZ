@@ -4,10 +4,13 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>deea886f-3df1-46ad-9675-fd5e0a2bb74b</UserSecretsId>
   </PropertyGroup>
 
 
   <ItemGroup>
+    <PackageReference Include="Algolia.Search" Version="7.6.2" />
+    <PackageReference Include="FluentValidation" Version="11.10.0" />
     <PackageReference Include="MudBlazor" Version="7.*" />
   </ItemGroup>
 </Project>

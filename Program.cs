@@ -1,5 +1,7 @@
 using MudBlazor.Services;
-using INGRezy.Components;
+using ingrEZ.Components;
+using Microsoft.AspNetCore.StaticFiles;
+using Algolia.Search.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +24,16 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseStaticFiles();
+// Set up custom content types - associating file extension to MIME type
+var provider = new FileExtensionContentTypeProvider();
+// Add new mappings
+provider.Mappings[".avif"] = "image/avif";
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = provider
+});
+
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
