@@ -1,4 +1,4 @@
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 
 <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -7,15 +7,14 @@
 
 <MudLayout>
   <MudAppBar Class="d-flex rounded-pill border-4 mt-6 mx-auto" Style="width: 95%;" Elevation="0" Gutters Fixed="false">
-    <MudText Class="flex-grow-1 ml-1 pl-20" Typo="Typo.h2" Align="Align.Center">
+    <MudLink Class="flex-grow-1 ml-1 pl-20" Style="text-align: center;" Color="Color.Default" Typo="Typo.h2"
+      Underline="Underline.None" Href="/">
       ingr<span style="color: var(--mud-palette-primary);">EZ</span>
-
-    </MudText>
-    <MudMenu Class="mr-6" Icon="@Icons.Material.Filled.AccountCircle" AriaLabel="Open user menu" Size="Size.Large"
-      AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopRight">
+    </MudLink>
+    <MudMenu Class="mr-6" Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Secondary" AriaLabel="Open user menu"
+      Size="Size.Large" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopRight">
       <MudMenuItem>Log In</MudMenuItem>
       <MudMenuItem>Sign Up</MudMenuItem>
-      <MudMenuItem Href="/">Home</MudMenuItem>
       <MudMenuItem Href="/new">New</MudMenuItem>
     </MudMenu>
   </MudAppBar>
