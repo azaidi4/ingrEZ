@@ -28,6 +28,7 @@ OnRecipeFormSubmit) }
       [nameof(RecipeList)] = new ComponentMetadata()
       {
         Type = typeof(RecipeList),
+        Parameters = { [nameof(RecipeList.OnListClose)] = EventCallback.Factory.Create(this, CloseList) }
       },
     };
 
@@ -41,6 +42,7 @@ OnRecipeFormSubmit) }
 
   private void CloseList()
   {
+    Console.WriteLine("close list");
     selectedComponent = components[nameof(RecipeForm)];
   }
 

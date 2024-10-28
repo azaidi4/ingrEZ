@@ -2,6 +2,19 @@
 @inject IConfiguration config
 @inject IHttpClientFactory ClientFactory
 
+<div class="mt-n12 mb-1 d-flex justify-end">
+  <MudPaper Class="mr-5" Elevation="0">
+    <MudTooltip Class="mt-1" Text="Recreate Recipes" Placement="Placement.Top" Delay="500">
+      <MudIconButton Class="pa-2" Icon="@Icons.Material.TwoTone.Refresh" Variant="Variant.Outlined"
+        OnClick="GenerateRecipes" Color="Color.Secondary" />
+    </MudTooltip>
+    <MudTooltip Class="mt-1" Text="Go Back" Placement="Placement.Top" Delay="500">
+      <MudIconButton Class="pa-2" Icon="@Icons.Material.TwoTone.Close" Variant="Variant.Outlined"
+        Color="Color.Secondary" OnClick="CloseList" />
+    </MudTooltip>
+  </MudPaper>
+</div>
+
 <MudGrid Spacing="5" Justify="Justify.FlexStart">
   @foreach (var geminiRecipe in recipes)
   {
