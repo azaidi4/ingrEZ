@@ -15,15 +15,15 @@
   [Parameter]
   public RecipeBuilder Recipe { get; set; } = new();
   [Parameter]
-  public EventCallback<RecipeBuilder> OnListClose { get; set; }
+  public EventCallback OnListClose { get; set; }
 
   private bool shouldRender;
-  private Recipe[] recipes = new Recipe[5];
+  private Recipe[] recipes = [];
 
-  async void OnBackClick()
+  async void CloseList()
   {
-    await OnListClose.InvokeAsync();
     shouldRender = false;
+    await OnListClose.InvokeAsync();
   }
 
   protected override bool ShouldRender()
@@ -31,13 +31,12 @@
     return shouldRender;
   }
 
-  protected async override void OnInitialized()
+  private async void GenerateRecipes()
   {
-    Console.WriteLine("initialize list");
-    shouldRender = true;
-
     var GeminiApiKey = config["Gemini:ApiKey"] ?? throw new Exception("GeminiApiKey not set");
     var client = ClientFactory.CreateClient("Gemini");
+
+    recipes = new Recipe[5];
 
     var requestBody = new RecipesRequestBodySchema
       {
@@ -46,14 +45,11 @@
         GenerationConfig = new(),
       };
 
-    @* var response = await client.PostAsJsonAsync($"v1beta/models/gemini-1.5-pro-002:generateContent?key={GeminiApiKey}",
-requestBody);
+    var response = await client.PostAsJsonAsync($"v1beta/models/gemini-1.5-pro-002:generateContent?key={GeminiApiKey}",
+    requestBody);
 
-var responseJson = await response.Content.ReadFromJsonAsync<RecipeResponseSchema>(); *@
-
-    await Task.Delay(500);
-    var responseJson = JsonSerializer.Deserialize<RecipeResponseSchema>(MockResponse.GetJson());
-
+    var responseJson = await response.Content.ReadFromJsonAsync<RecipeResponseSchema>();
+    
     recipes = responseJson!.Candidates[0].Content.Parts[0].Text.Recipes;
     StateHasChanged();
   }
@@ -63,4 +59,10 @@ var responseJson = await response.Content.ReadFromJsonAsync<RecipeResponseSchema
     return $"Meals: {String.Join(", ", Recipe.Meals)}. Ingredients: {String.Join(", ", Recipe.Ingredients)}";
   }
 
+  protected override void OnInitialized()
+  {
+    Console.WriteLine("initialize list");
+    shouldRender = true;
+    GenerateRecipes();
+  }
 }

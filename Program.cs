@@ -2,7 +2,6 @@ using MudBlazor.Services;
 using ingrEZ.Components;
 using Microsoft.AspNetCore.StaticFiles;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add MudBlazor services

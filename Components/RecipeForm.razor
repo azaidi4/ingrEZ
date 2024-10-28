@@ -26,7 +26,7 @@
 
     <MudFlexBreak />
 
-    <MudItem Class=" mb-10" xs="5">
+    <MudItem Class="mb-10" xs="5">
       <MudPaper Class="pa-2 border-2" Elevation="0">
         <MudText Typo="Typo.h4" Align="Align.Center">
           What's in the <span style="color: var(--mud-palette-primary);">fridge?</span>
@@ -47,7 +47,8 @@
 
     <MudItem xs=" 5">
       <MudPaper Class="pa-2 border-2" MinHeight="220px" Elevation="0">
-        <MudText Typo="Typo.h6" GutterBottom Align="Align.Center" Style="font-weight: bold;">Added Ingredients
+        <MudText Typo="Typo.h6" GutterBottom Align="Align.Center" Style="font-weight: bold;">
+          Added Ingredients
         </MudText>
         @if (recipe.Ingredients.Count == 0)
         {
@@ -95,8 +96,9 @@
 
     if (!result.IsValid)
     {
-      recipe.MealError = result.Errors.FirstOrDefault<ValidationFailure>(e => e.PropertyName == "Meals")?.ErrorMessage;
-      recipe.IngredientError = result.Errors.FirstOrDefault<ValidationFailure>(e => e.PropertyName ==
+      recipe.MealError = result.Errors.FirstOrDefault<ValidationFailure>(error => error.PropertyName ==
+      "Meals")?.ErrorMessage;
+      recipe.IngredientError = result.Errors.FirstOrDefault<ValidationFailure>(error => error.PropertyName ==
       "Ingredients")?.ErrorMessage;
     }
     else

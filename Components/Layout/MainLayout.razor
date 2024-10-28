@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
 <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -40,19 +40,17 @@
       H2 = new()
       {
         FontFamily = new[] { "Fugaz One", "Helvetica", "Arial", "sans-serif" },
-      @* FontWeight = 800, *@
-},
-  H4 = new()
-  {
-    FontFamily = new[] { "Fugaz One", "Helvetica", "Arial", "sans-serif" },
-      @* FontWeight = 800, *@
+      },
+      H4 = new()
+      {
+        FontFamily = new[] { "Fugaz One", "Helvetica", "Arial", "sans-serif" },
 
-},
-  Default = new()
-  {
-    FontFamily = new[] { "Work Sans", "Helvetica", "Arial", "sans-serif" }
-  }
-};
+      },
+      Default = new()
+      {
+        FontFamily = new[] { "Work Sans", "Helvetica", "Arial", "sans-serif" }
+      }
+    };
   private LayoutProperties _layout = new()
     {
       AppbarHeight = "90px",

@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace ingrEZ;
 
-public partial class Recipe
+public class Recipe
 {
   [JsonPropertyName("name")]
   public string Name { get; set; } = string.Empty;
