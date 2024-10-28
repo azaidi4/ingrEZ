@@ -8,7 +8,8 @@
 <MudLayout>
   <MudAppBar Class="d-flex rounded-pill border-4 mt-6 mx-auto" Style="width: 95%;" Elevation="0" Gutters Fixed="false">
     <MudText Class="flex-grow-1 ml-1 pl-20" Typo="Typo.h2" Align="Align.Center">
-      ingr<MudText Inline Typo="Typo.h2" Color="Color.Primary" Align="Align.Center">EZ</MudText>
+      ingr<span style="color: var(--mud-palette-primary);">EZ</span>
+
     </MudText>
     <MudMenu Class="mr-6" Icon="@Icons.Material.Filled.AccountCircle" AriaLabel="Open user menu" Size="Size.Large"
       AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopRight">
@@ -39,19 +40,19 @@
       H2 = new()
       {
         FontFamily = new[] { "Fugaz One", "Helvetica", "Arial", "sans-serif" },
-        @* FontWeight = 800, *@
-      },
-      H4 = new()
-      {
-        FontFamily = new[] { "Fugaz One", "Helvetica", "Arial", "sans-serif" },
-        @* FontWeight = 800, *@
+      @* FontWeight = 800, *@
+},
+  H4 = new()
+  {
+    FontFamily = new[] { "Fugaz One", "Helvetica", "Arial", "sans-serif" },
+      @* FontWeight = 800, *@
 
-      },
-      Default = new()
-      {
-        FontFamily = new[] { "Work Sans", "Helvetica", "Arial", "sans-serif" }
-      }
-    };
+},
+  Default = new()
+  {
+    FontFamily = new[] { "Work Sans", "Helvetica", "Arial", "sans-serif" }
+  }
+};
   private LayoutProperties _layout = new()
     {
       AppbarHeight = "90px",
@@ -93,6 +94,7 @@
       GrayLight = "#e8e8e8",
       GrayLighter = "#f9f9f9",
       ActionDisabledBackground = "#e8e8e8",
+      ActionDefault = "#00a700",
     };
 
   private readonly PaletteDark _darkPalette = new()

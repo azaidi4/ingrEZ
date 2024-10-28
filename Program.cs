@@ -1,7 +1,7 @@
 using MudBlazor.Services;
 using ingrEZ.Components;
 using Microsoft.AspNetCore.StaticFiles;
-using Algolia.Search.Clients;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +11,19 @@ builder.Services.AddMudServices();
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+var geminiApiUrl = builder.Configuration["Gemini:ApiUrl"] ??
+    throw new Exception("GeminiApiUrl is not set");
+
+builder.Services.AddHttpClient("Gemini", httpClient =>
+{
+    httpClient.BaseAddress = new Uri(geminiApiUrl);
+}).AddStandardResilienceHandler(options =>
+{
+    options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(50);
+    options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(120);
+    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(100);
+});
 
 var app = builder.Build();
 

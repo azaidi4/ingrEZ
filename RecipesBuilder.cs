@@ -54,6 +54,8 @@ public class RecipeBuilderValidator : AbstractValidator<RecipeBuilder>
   {
     RuleFor(recipe => recipe.Meals).NotEmpty().WithMessage("Choose a meal type!");
     RuleFor(recipe => recipe.Ingredients).NotEmpty().WithMessage("No ingredients added!");
+    RuleFor(recipe => recipe.Ingredients).Must(x => x.Count > 1).WithMessage("Please enter more than 1 ingredient!");
+
   }
 
   public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>

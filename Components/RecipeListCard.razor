@@ -1,0 +1,150 @@
+@inject IDialogService DialogService
+
+<MudCard class="border-2 mr-5" Elevation="0">
+  <MudCardHeader>
+    <CardHeaderContent>
+      @if (Recipe == null)
+      {
+        <MudSkeleton Height="35px" Width="@GetVariableWidth()" Animation="Animation.Wave" />
+      }
+      else
+      {
+        <MudText Typo="Typo.h6">@Recipe.Name</MudText>
+      }
+    </CardHeaderContent>
+    <CardHeaderActions>
+      @if (Recipe == null)
+      {
+        <MudSkeleton class="mt-2 mr-1" Height="35px" Width="25px" Animation="Animation.Wave" />
+      }
+      else
+      {
+        <div class="mt-3 mx-2">
+          <MudTooltip Text="@($"{Recipe.PreperationTime} min")" Placement="Placement.Top" Arrow>
+            @for (int i = 0; i < PreperationLevel(); i++)
+            {
+              <MudIcon Class="mx-n1" Icon="@Icons.Material.TwoTone.HourglassFull" Size="Size.Small" />
+            }
+          </MudTooltip>
+        </div>
+      }
+    </CardHeaderActions>
+  </MudCardHeader>
+
+  <MudCardContent>
+    @if (Recipe == null)
+    {
+      <MudSkeleton Width="@GetVariableWidth(min:35, max: 60)" Height="25px" Animation="Animation.Wave" />
+      <MudSkeleton Width="@GetVariableWidth(min:35, max: 60)" Height="25px" Animation="Animation.Wave" />
+      <MudSkeleton Width="@GetVariableWidth(min:35, max: 60)" Height="25px" Animation="Animation.Wave" />
+      <br />
+      <MudSkeleton Width="@GetVariableWidth(min:35, max: 60)" Height="25px" Animation="Animation.Wave" />
+    }
+    else
+    {
+      <MudText Typo="Typo.body1" class="d-flex align-center">
+        <MudIcon Icon="@GetMealIcon()" class="mr-1" />
+        @Recipe.MealType
+      </MudText>
+      <MudText Typo="Typo.body1" Color="@DifficultyColor()">@Recipe.Difficulty</MudText>
+      <MudText Typo="Typo.body1">@($"{Recipe.ServingSize} Servings")</MudText>
+      <br />
+      <MudText Typo="Typo.body1">@FormatIngredients()</MudText>
+    }
+  </MudCardContent>
+
+  <MudCardActions>
+    @if (Recipe == null)
+    {
+      <MudSkeleton Class="ml-2 mb-3" SkeletonType="SkeletonType.Rectangle" Width="25%" Height="2em"
+        Animation="Animation.Wave" />
+    }
+    else
+    {
+      <MudButton Color="Color.Primary" OnClick="ShowRecipeDialogAsync">More Info</MudButton>
+      <MudSpacer />
+      <MudButton Class="mr-1" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Add" Size="Size.Small">
+        Add
+      </MudButton>
+      @* <MudButtonGroup Class="mr-2" Color="Color.Primary">
+    <MudButton StartIcon="@Icons.Material.Outlined.Add" Size="Size.Small">Add To
+    </MudButton>
+    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
+    <MudMenuItem>Pinned</MudMenuItem>
+    <MudMenuItem>Meal Plan</MudMenuItem>
+    </MudMenu>
+    </MudButtonGroup> *@
+    }
+  </MudCardActions>
+</MudCard>
+
+
+@code {
+  [Parameter]
+  public Recipe? Recipe { get; set; }
+
+  Random random = new Random();
+
+  private Task ShowRecipeDialogAsync()
+  {
+    var options = new DialogOptions() { CloseButton = true };
+
+    var parameters = new DialogParameters<RecipeDialog>
+{
+{ x => x.Recipe, Recipe },
+};
+    return DialogService.ShowAsync<RecipeDialog>(Recipe!.Name, parameters, options);
+  }
+
+  private string GetMealIcon()
+  {
+    if (Recipe!.MealType == "Breakfast")
+    {
+      return @Icons.Material.Outlined.Egg;
+    }
+    else if (Recipe!.MealType == "Lunch")
+    {
+      return @Icons.Material.Outlined.LunchDining;
+    }
+    else
+    {
+      return @Icons.Material.Outlined.DinnerDining;
+    }
+  }
+
+  private string GetVariableWidth(int min = 60, int max = 75)
+  {
+    return $"{random.Next(min, max)}%";
+  }
+
+  private int PreperationLevel()
+  {
+    var result = Math.Min(Recipe!.PreperationTime / 15, 3);
+    return result > 0 ? result : 1;
+  }
+
+  private string FormatIngredients()
+  {
+    if (Recipe!.Ingredients.Length <= 4)
+    {
+      return string.Join(", ", Recipe.Ingredients);
+    }
+
+    return $"{string.Join(", ", Recipe.Ingredients.Take(4))} + {Recipe.Ingredients.Length - 4} more";
+  }
+
+  private Color DifficultyColor()
+  {
+    switch (Recipe!.Difficulty)
+    {
+      case "Easy":
+        return Color.Success;
+      case "Medium":
+        return Color.Warning;
+      case "Hard":
+        return Color.Error;
+      default:
+        return Color.Default;
+    }
+  }
+}

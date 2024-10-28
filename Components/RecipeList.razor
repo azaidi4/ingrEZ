@@ -1,0 +1,66 @@
+@using System.Text.Json
+@inject IConfiguration config
+@inject IHttpClientFactory ClientFactory
+
+<MudGrid Spacing="5" Justify="Justify.FlexStart">
+  @foreach (var geminiRecipe in recipes)
+  {
+    <MudItem xs="4">
+      <RecipeListCard Recipe="@geminiRecipe" />
+    </MudItem>
+  }
+  </MudGrid>
+
+  @code {
+  [Parameter]
+  public RecipeBuilder Recipe { get; set; } = new();
+  [Parameter]
+  public EventCallback<RecipeBuilder> OnListClose { get; set; }
+
+  private bool shouldRender;
+  private Recipe[] recipes = new Recipe[5];
+
+  async void OnBackClick()
+  {
+    await OnListClose.InvokeAsync();
+    shouldRender = false;
+  }
+
+  protected override bool ShouldRender()
+  {
+    return shouldRender;
+  }
+
+  protected async override void OnInitialized()
+  {
+    Console.WriteLine("initialize list");
+    shouldRender = true;
+
+    var GeminiApiKey = config["Gemini:ApiKey"] ?? throw new Exception("GeminiApiKey not set");
+    var client = ClientFactory.CreateClient("Gemini");
+
+    var requestBody = new RecipesRequestBodySchema
+      {
+        Contents = [new() { Role = "user", Parts = [new() { Text = BuildGeminiInput() }] }],
+        SystemInstruction = new(),
+        GenerationConfig = new(),
+      };
+
+    @* var response = await client.PostAsJsonAsync($"v1beta/models/gemini-1.5-pro-002:generateContent?key={GeminiApiKey}",
+requestBody);
+
+var responseJson = await response.Content.ReadFromJsonAsync<RecipeResponseSchema>(); *@
+
+    await Task.Delay(500);
+    var responseJson = JsonSerializer.Deserialize<RecipeResponseSchema>(MockResponse.GetJson());
+
+    recipes = responseJson!.Candidates[0].Content.Parts[0].Text.Recipes;
+    StateHasChanged();
+  }
+
+  private string BuildGeminiInput()
+  {
+    return $"Meals: {String.Join(", ", Recipe.Meals)}. Ingredients: {String.Join(", ", Recipe.Ingredients)}";
+  }
+
+}
