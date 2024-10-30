@@ -1,4 +1,7 @@
+@using Microsoft.EntityFrameworkCore
+@using ingrEZ.Models
 @inject IDialogService DialogService
+@inject IDbContextFactory<ingrEZ.Data.IngrEZDataContext> DbFactory
 
 <MudCard class="border-2 mr-5" Elevation="0">
   <MudCardHeader>
@@ -61,11 +64,26 @@
     }
     else
     {
-      <MudButton Color="Color.Primary" OnClick="ShowRecipeDialogAsync">More Info</MudButton>
+      <MudButton Color="Color.Primary" OnClick="ShowRecipeDialog">More Info</MudButton>
       <MudSpacer />
-      <MudButton Class="mr-1" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Add" Size="Size.Small">
-        Add
-      </MudButton>
+      @if (saved)
+      {
+        <MudButton Class="mr-1" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Check" Disabled>
+          Added
+        </MudButton>
+      }
+      else if (exists)
+      {
+        <MudButton Class="mr-1" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Error" Disabled>
+          Already Exists
+        </MudButton>
+      }
+      else
+      {
+        <MudButton Class="mr-1" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Add" OnClick="AddRecipe">
+          Add
+        </MudButton>
+      }
       @* <MudButtonGroup Class="mr-2" Color="Color.Primary">
     <MudButton StartIcon="@Icons.Material.Outlined.Add" Size="Size.Small">Add To
     </MudButton>
@@ -83,17 +101,48 @@
   [Parameter]
   public Recipe? Recipe { get; set; }
 
+  DialogOptions CardMessageOptions = new DialogOptions() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
   Random random = new Random();
+  bool saved, exists = false;
 
-  private Task ShowRecipeDialogAsync()
+  private Task ShowRecipeDialog()
   {
-    var options = new DialogOptions() { CloseButton = true };
+    var options = new DialogOptions() { CloseButton = true, FullWidth = true };
+    var parameters = new DialogParameters<RecipeDialog> { { x => x.Recipe, Recipe } };
 
-    var parameters = new DialogParameters<RecipeDialog>
-{
-{ x => x.Recipe, Recipe },
-};
     return DialogService.ShowAsync<RecipeDialog>(Recipe!.Name, parameters, options);
+  }
+
+  private async void AddRecipe()
+  {
+    bool? result = await DialogService.ShowMessageBox(
+    "Add to Pinned",
+    (MarkupString)$"Do you want to add <em>{Recipe!.Name}</em>?",
+    yesText: "Add", cancelText: "Cancel", options: CardMessageOptions);
+
+    if (result != null)
+    {
+      using var context = DbFactory.CreateDbContext();
+      bool recipeExists = await context.Recipe.AnyAsync(r => r.Hash == Recipe.ComputeHash());
+
+      if (recipeExists)
+      {
+        exists = true;
+        StateHasChanged();
+
+        await DialogService.ShowMessageBox(
+        "Unable to Add to Pinned!",
+        (MarkupString)$"<em>{Recipe!.Name}</em> already exists in your pinned recipes.",
+        options: CardMessageOptions);
+      }
+      else
+      {
+        context.Recipe.Add(new RecipeEntity(Recipe));
+        await context.SaveChangesAsync();
+        saved = true;
+        StateHasChanged();
+      }
+    }
   }
 
   private string GetMealIcon()

@@ -1,6 +1,8 @@
-using MudBlazor.Services;
 using ingrEZ.Components;
+using ingrEZ.Data;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +26,11 @@ builder.Services.AddHttpClient("Gemini", httpClient => httpClient.BaseAddress = 
   options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(120);
   options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(100);
 });
+
+builder.Services.AddDbContextFactory<IngrEZDataContext>(
+  options => options.UseMySql(recipeConnectionString, new MySqlServerVersion(new Version(11, 5, 2))
+  ).LogTo(Console.WriteLine, LogLevel.Information).EnableSensitiveDataLogging().EnableDetailedErrors()
+);
 
 var app = builder.Build();
 
