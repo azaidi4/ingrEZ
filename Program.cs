@@ -14,14 +14,15 @@ builder.Services.AddRazorComponents()
 var geminiApiUrl = builder.Configuration["Gemini:ApiUrl"] ??
     throw new Exception("GeminiApiUrl is not set");
 
-builder.Services.AddHttpClient("Gemini", httpClient =>
+var recipeConnectionString = builder.Configuration.GetConnectionString("IngrEZDataContext") ??
+    throw new InvalidOperationException("Connection string 'IngrEZDataContext' not found.");
+
+builder.Services.AddHttpClient("Gemini", httpClient => httpClient.BaseAddress = new Uri(geminiApiUrl))
+.AddStandardResilienceHandler(options =>
 {
-    httpClient.BaseAddress = new Uri(geminiApiUrl);
-}).AddStandardResilienceHandler(options =>
-{
-    options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(50);
-    options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(120);
-    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(100);
+  options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(50);
+  options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(120);
+  options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(100);
 });
 
 var app = builder.Build();
@@ -29,9 +30,9 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+  app.UseExceptionHandler("/Error", createScopeForErrors: true);
+  // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+  app.UseHsts();
 }
 
 app.UseHttpsRedirection();
@@ -43,7 +44,7 @@ provider.Mappings[".avif"] = "image/avif";
 
 app.UseStaticFiles(new StaticFileOptions
 {
-    ContentTypeProvider = provider
+  ContentTypeProvider = provider
 });
 
 app.UseAntiforgery();
