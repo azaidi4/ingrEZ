@@ -22,7 +22,7 @@ namespace ingrEZ.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     PinnedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    Hash = table.Column<string>(type: "varchar(255)", nullable: false, computedColumnSql: "SHA2(ItemizedInstructions, 256)", stored: true)
+                    Hash = table.Column<string>(type: "text", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Name = table.Column<string>(type: "text", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),

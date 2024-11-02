@@ -122,8 +122,9 @@
 
     if (result != null)
     {
+      var recipeHash = Recipe.ComputeHash();
       using var context = DbFactory.CreateDbContext();
-      bool recipeExists = await context.Recipe.AnyAsync(r => r.Hash == Recipe.ComputeHash());
+      bool recipeExists = await context.Recipe.AnyAsync(r => r.Hash == recipeHash);
 
       if (recipeExists)
       {
@@ -137,7 +138,9 @@
       }
       else
       {
-        context.Recipe.Add(new RecipeEntity(Recipe));
+        Recipe.PinnedDate = DateTime.Now;
+        Recipe.Hash = recipeHash;
+        context.Recipe.Add(Recipe);
         await context.SaveChangesAsync();
         saved = true;
         StateHasChanged();

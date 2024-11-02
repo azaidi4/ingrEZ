@@ -12,7 +12,7 @@ using ingrEZ.Data;
 namespace ingrEZ.Migrations
 {
     [DbContext(typeof(IngrEZDataContext))]
-    [Migration("20241030215402_InitialCreate")]
+    [Migration("20241102105417_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -25,7 +25,7 @@ namespace ingrEZ.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("ingrEZ.Models.RecipeEntity", b =>
+            modelBuilder.Entity("ingrEZ.Models.Recipe", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -39,9 +39,8 @@ namespace ingrEZ.Migrations
                         .HasAnnotation("Relational:JsonPropertyName", "difficulty");
 
                     b.Property<string>("Hash")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("varchar(255)")
-                        .HasComputedColumnSql("SHA2(ItemizedInstructions, 256)", true);
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Ingredients")
                         .IsRequired()
@@ -63,7 +62,8 @@ namespace ingrEZ.Migrations
                         .HasColumnType("text")
                         .HasAnnotation("Relational:JsonPropertyName", "name");
 
-                    b.Property<DateTime>("PinnedDate")
+                    b.Property<DateTime?>("PinnedDate")
+                        .IsRequired()
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("PreperationTime")
