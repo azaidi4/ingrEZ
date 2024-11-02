@@ -96,77 +96,54 @@ public partial class RecipesRequestBodySchema
     public ItemsProperties Properties { get; set; } = new();
 
     [JsonPropertyName("required")]
-    public string[] ItemsRequired { get; set; } = [
+    public string[] ItemsRequired { get; set; } =
+    [
       "name",
-    "mealType",
-    "preperationTime",
-    "ServingSize",
-    "difficulty",
-    "ingredients",
-    "itemizedInstructions"
+      "mealType",
+      "preperationTime",
+      "servingSize",
+      "difficulty",
+      "ingredients",
+      "itemizedInstructions"
     ];
   }
 
   public partial class ItemsProperties
   {
     [JsonPropertyName("name")]
-    public ItemPropertyField Name { get; set; } = new()
-    {
-      Type = "string"
-    };
-
-    [JsonPropertyName("mealType")]
-    public ItemPropertyField MealType { get; set; } = new()
-    {
-      Type = "string"
-    };
-
-    [JsonPropertyName("preperationTime")]
-    public ItemPropertyField PreperationTime { get; set; } = new()
-    {
-      Type = "integer"
-    };
-
-    [JsonPropertyName("servingSize")]
-    public ItemPropertyField ServingSize { get; set; } = new()
-    {
-      Type = "integer"
-    };
+    public ItemPropertyField Name { get; set; } = new() { Type = "string" };
 
     [JsonPropertyName("difficulty")]
-    public ItemPropertyField Difficulty { get; set; } = new()
-    {
-      Type = "string"
-    };
+    public ItemPropertyField Difficulty { get; set; } = new() { Type = "string" };
+
+    [JsonPropertyName("mealType")]
+    public ItemPropertyField MealType { get; set; } = new() { Type = "string" };
+
+    [JsonPropertyName("servingSize")]
+    public ItemPropertyField ServingSize { get; set; } = new() { Type = "integer" };
+
+    [JsonPropertyName("preperationTime")]
+    public ItemPropertyField PreperationTime { get; set; } = new() { Type = "integer" };
 
     [JsonPropertyName("ingredients")]
     public ItemPropertyArray Ingredients { get; set; } = new()
     {
       Type = "array",
-      Items = new()
-      {
-        Type = "string"
-      }
+      Items = new() { Type = "string" }
     };
 
     [JsonPropertyName("itemizedInstructions")]
     public ItemPropertyArray ItemizedInstructions { get; set; } = new()
     {
       Type = "array",
-      Items = new()
-      {
-        Type = "string"
-      }
+      Items = new() { Type = "string" }
     };
 
     [JsonPropertyName("suggestions")]
     public ItemPropertyArray Suggestions { get; set; } = new()
     {
       Type = "array",
-      Items = new()
-      {
-        Type = "string"
-      }
+      Items = new() { Type = "string" }
     };
   }
 
