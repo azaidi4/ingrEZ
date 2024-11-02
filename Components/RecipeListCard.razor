@@ -68,19 +68,19 @@
       <MudSpacer />
       @if (saved)
       {
-        <MudButton Class="mr-1" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Check" Disabled>
+        <MudButton Class="mr-1" Color="Color.Primary" StartIcon="@Icons.Material.TwoTone.Check" Disabled>
           Added
         </MudButton>
       }
       else if (exists)
       {
-        <MudButton Class="mr-1" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Error" Disabled>
+        <MudButton Class="mr-1" Color="Color.Error" StartIcon="@Icons.Material.TwoTone.ErrorOutline" Disabled>
           Already Exists
         </MudButton>
       }
       else
       {
-        <MudButton Class="mr-1" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Add" OnClick="AddRecipe">
+        <MudButton Class="mr-1" Color="Color.Primary" StartIcon="@Icons.Material.TwoTone.Add" OnClick="AddRecipe">
           Add
         </MudButton>
       }
@@ -152,7 +152,7 @@
   {
     if (Recipe!.MealType == "Breakfast")
     {
-      return @Icons.Material.Outlined.Egg;
+      return @Icons.Material.Outlined.EggAlt;
     }
     else if (Recipe!.MealType == "Lunch")
     {
