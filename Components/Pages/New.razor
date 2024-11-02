@@ -16,6 +16,10 @@
 }
 
 @code {
+
+  private ComponentMetadata? selectedComponent;
+  private RecipeBuilder recipe = new();
+
   private Dictionary<string, ComponentMetadata> components => new()
     {
       [nameof(RecipeForm)] = new ComponentMetadata()
@@ -27,15 +31,15 @@ OnRecipeFormSubmit) }
       [nameof(RecipeList)] = new ComponentMetadata()
       {
         Type = typeof(RecipeList),
-        Parameters = { [nameof(RecipeList.OnListClose)] = EventCallback.Factory.Create(this, CloseList) }
+        Parameters = { [nameof(RecipeList.OnListClose)] = EventCallback.Factory.Create(this,
+CloseList), [nameof(RecipeList.Recipe)] = recipe }
       },
     };
 
-  private ComponentMetadata? selectedComponent;
 
   private void OnRecipeFormSubmit(RecipeBuilder recieved)
   {
-    components[nameof(RecipeList)].Parameters[nameof(RecipeList.Recipe)] = recieved;
+    recipe = recieved;
     selectedComponent = components[nameof(RecipeList)];
   }
 
