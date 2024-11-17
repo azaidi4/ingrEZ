@@ -44,15 +44,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Set up custom content types - associating file extension to MIME type
-var provider = new FileExtensionContentTypeProvider();
-// Add new mappings
-provider.Mappings[".avif"] = "image/avif";
-
-app.UseStaticFiles(new StaticFileOptions
-{
-  ContentTypeProvider = provider
-});
+app.MapStaticAssets();
 
 app.UseAntiforgery();
 
