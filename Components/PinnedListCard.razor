@@ -13,18 +13,8 @@
       else
       {
         <div class="d-flex align-start">
-          <MudIcon Class="mr-1" Icon="@GetMealIcon()" Size="Size.Small" />
-          <MudText Typo="Typo.body1"><b>@Recipe.Name</b></MudText>
-          <MudSpacer />
-          @* <MudTooltip Text="@($"{Recipe.PreperationTime} min")" Placement="Placement.Top" Arrow>
-            <div class="ml-2">
-              @for (int i = 0; i < PreperationLevel(); i++)
-              {
-                <MudIcon Class="ml-n2" Icon="@Icons.Material.TwoTone.HourglassFull" Size="Size.Small" />
-              }
-            </div>
-          </MudTooltip> *@
           <MudIcon Class="mr-1" Icon="@GetMealIcon()" Size="Size.Small"/>
+          <MudText Typo="Typo.body1" Style="line-height: 1.2em;"><b>@Recipe.Name</b></MudText>
         </div>
       }
     </CardHeaderContent>
@@ -55,8 +45,6 @@
     else
     {
       <MudButton Color="Color.Primary" OnClick="ShowRecipeDialog">More Info</MudButton>
-      <MudSpacer />
-      <MudIconButton Class="mr-1" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete" OnClick="RemoveRecipe" />
       <MudSpacer/>
       <MudIconButton Class="pa-1" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete" OnClick="RemoveRecipe"/>
     }
