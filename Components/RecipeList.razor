@@ -7,11 +7,11 @@
   <MudPaper Class="mr-5" Elevation="0">
     <MudTooltip Class="mt-1" Text="Recreate Recipes" Placement="Placement.Top" Delay="500">
       <MudIconButton Class="pa-2" Icon="@Icons.Material.TwoTone.Refresh" Variant="Variant.Filled"
-        Color="Color.Secondary" OnClick="GenerateRecipes" />
+                     Color="Color.Secondary" OnClick="GenerateRecipes"/>
     </MudTooltip>
     <MudTooltip Class="mt-1" Text="Go Back" Placement="Placement.Top" Delay="500">
       <MudIconButton Class="pa-2" Icon="@Icons.Material.TwoTone.Close" Variant="Variant.Filled"
-        Color="Color.Secondary" OnClick="CloseList" />
+                     Color="Color.Secondary" OnClick="CloseList"/>
     </MudTooltip>
   </MudPaper>
 </div>
@@ -20,16 +20,14 @@
   @foreach (var geminiRecipe in recipes)
   {
     <MudItem xs="4">
-      <RecipeListCard Recipe="@geminiRecipe" />
+      <RecipeListCard Recipe="@geminiRecipe"/>
     </MudItem>
   }
-  </MudGrid>
+</MudGrid>
 
-  @code {
-  [Parameter]
-  public RecipeBuilder Recipe { get; set; } = new();
-  [Parameter]
-  public EventCallback OnListClose { get; set; }
+@code {
+  [Parameter] public RecipeBuilder Recipe { get; set; } = new();
+  [Parameter] public EventCallback OnListClose { get; set; }
 
   private bool shouldRender;
   private Recipe[] recipes = [];
@@ -53,11 +51,11 @@
     recipes = new Recipe[5];
 
     var requestBody = new RecipesRequestBodySchema
-      {
-        Contents = [new() { Role = "user", Parts = [new() { Text = BuildGeminiInput() }] }],
-        SystemInstruction = new(),
-        GenerationConfig = new(),
-      };
+    {
+      Contents = [new() { Role = "user", Parts = [new() { Text = BuildGeminiInput() }] }],
+      SystemInstruction = new(),
+      GenerationConfig = new(),
+    };
 
     var response = await client.PostAsJsonAsync($"v1beta/models/gemini-1.5-pro-002:generateContent?key={GeminiApiKey}",
     requestBody);
@@ -79,4 +77,5 @@
     shouldRender = true;
     GenerateRecipes();
   }
+
 }

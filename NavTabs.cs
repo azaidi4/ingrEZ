@@ -1,6 +1,6 @@
 public enum Tab
 {
-  Pinned,
-  Plans,
-  New
+    Pinned,
+    Plans,
+    New
 }

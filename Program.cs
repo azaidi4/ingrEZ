@@ -14,22 +14,22 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 var geminiApiUrl = builder.Configuration["Gemini:ApiUrl"] ??
-    throw new Exception("GeminiApiUrl is not set");
+                   throw new Exception("GeminiApiUrl is not set");
 
 var recipeConnectionString = builder.Configuration.GetConnectionString("IngrEZDataContext") ??
-    throw new InvalidOperationException("Connection string 'IngrEZDataContext' not found.");
+                             throw new InvalidOperationException("Connection string 'IngrEZDataContext' not found.");
 
 builder.Services.AddHttpClient("Gemini", httpClient => httpClient.BaseAddress = new Uri(geminiApiUrl))
-.AddStandardResilienceHandler(options =>
-{
-  options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(50);
-  options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(120);
-  options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(100);
-});
+    .AddStandardResilienceHandler(options =>
+    {
+        options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(50);
+        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(120);
+        options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(100);
+    });
 
 builder.Services.AddDbContextFactory<IngrEZDataContext>(
-  options => options.UseMySql(recipeConnectionString, new MySqlServerVersion(new Version(11, 5, 2))
-  ).LogTo(Console.WriteLine, LogLevel.Information).EnableSensitiveDataLogging().EnableDetailedErrors()
+    options => options.UseMySql(recipeConnectionString, new MySqlServerVersion(new Version(11, 5, 2))
+    ).EnableSensitiveDataLogging().EnableDetailedErrors()
 );
 
 var app = builder.Build();
@@ -37,9 +37,9 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-  app.UseExceptionHandler("/Error", createScopeForErrors: true);
-  // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-  app.UseHsts();
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();

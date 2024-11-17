@@ -14,7 +14,7 @@
     <MudItem xs="4">
       <MudPaper Class="pa-2" Elevation="0">
         <MudChipSet T="Meal" SelectedValues="@recipe.Meals" SelectedValuesChanged="recipe.AddMeals"
-          Variant="Variant.Text" SelectionMode="SelectionMode.MultiSelection" Color="Color.Primary">
+                    Variant="Variant.Text" SelectionMode="SelectionMode.MultiSelection" Color="Color.Primary">
           @foreach (var meal in Enum.GetValues<Meal>())
           {
             <MudChip Class="mr-5" Value="@meal" />
@@ -24,7 +24,7 @@
       </MudPaper>
     </MudItem>
 
-    <MudFlexBreak />
+    <MudFlexBreak/>
 
     <MudItem Class="mb-10" xs="5">
       <MudPaper Class="pa-2 border-2" Elevation="0">
@@ -37,13 +37,13 @@
     <MudItem xs="4">
       <MudPaper Class="pa-2" Elevation="0">
         <MudAutocomplete T="string" Placeholder="Add your ingredients" Value="null" ValueChanged="recipe.AddIngredient"
-          SearchFunc="@ingredientSearch!.SearchIngredients" ShowProgressIndicator
-          AdornmentIcon="@Icons.Material.Outlined.Search" />
+                         SearchFunc="@ingredientSearch!.SearchIngredients" ShowProgressIndicator
+                         AdornmentIcon="@Icons.Material.Outlined.Search"/>
         <MudText style="font-weight: 600" Color="Color.Error">@recipe.IngredientError</MudText>
       </MudPaper>
     </MudItem>
 
-    <MudFlexBreak />
+    <MudFlexBreak/>
 
     <MudItem xs=" 5">
       <MudPaper Class="pa-2 border-2" MinHeight="220px" Elevation="0">
@@ -53,27 +53,27 @@
         @if (recipe.Ingredients.Count == 0)
         {
           <MudContainer Class="px-10 ">
-            <MudSkeleton SkeletonType="SkeletonType.Text" Width="100%" />
-            <MudSkeleton SkeletonType="SkeletonType.Text" Width="100%" />
-            <MudSkeleton SkeletonType="SkeletonType.Text" Width="100%" />
+            <MudSkeleton SkeletonType="SkeletonType.Text" Width="100%"/>
+            <MudSkeleton SkeletonType="SkeletonType.Text" Width="100%"/>
+            <MudSkeleton SkeletonType="SkeletonType.Text" Width="100%"/>
           </MudContainer>
         }
         else
           @foreach (var item in recipe.Ingredients)
-          {
-            <MudChip T="string" Value="@item" OnClose="recipe.RemoveIngredient" />
-          }
+        {
+          <MudChip T="string" Value="@item" OnClose="recipe.RemoveIngredient"/>
+        }
       </MudPaper>
     </MudItem>
     <MudItem xs="4">
       <MudButton Variant="Variant.Filled" OnClick="DebugFillForm">Debug Form</MudButton>
     </MudItem>
 
-    <MudFlexBreak />
+    <MudFlexBreak/>
 
     <MudItem xs="6" Class="pt-15" Style="text-align: center;">
       <MudButton Variant="Variant.Filled" DropShadow="false" StartIcon="@Icons.Material.TwoTone.Restaurant"
-        Size="Size.Large" Color="Color.Primary" OnClick="Submit">
+                 Size="Size.Large" Color="Color.Primary" OnClick="Submit">
         Find Recipes
       </MudButton>
     </MudItem>
@@ -81,8 +81,7 @@
 </MudForm>
 
 @code {
-  [Parameter]
-  public EventCallback<RecipeBuilder> OnRecipeFormSubmit { get; set; }
+  [Parameter] public EventCallback<RecipeBuilder> OnRecipeFormSubmit { get; set; }
 
   MudForm? form;
   IngredientSearch? ingredientSearch;
@@ -97,9 +96,9 @@
     if (!result.IsValid)
     {
       recipe.MealError = result.Errors.FirstOrDefault<ValidationFailure>(error => error.PropertyName ==
-      "Meals")?.ErrorMessage;
+                                                                                  "Meals")?.ErrorMessage;
       recipe.IngredientError = result.Errors.FirstOrDefault<ValidationFailure>(error => error.PropertyName ==
-      "Ingredients")?.ErrorMessage;
+                                                                                        "Ingredients")?.ErrorMessage;
     }
     else
     {
@@ -126,4 +125,5 @@
     ingredientSearch = new(config["Algolia:ApplicationId"], config["Algolia:SearchApiKey"]);
     recipe = new();
   }
+
 }

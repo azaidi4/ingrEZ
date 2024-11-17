@@ -8,7 +8,7 @@
     <CardHeaderContent>
       @if (Recipe == null)
       {
-        <MudSkeleton Height="35px" Width="@GetVariableWidth()" Animation="Animation.Wave" />
+        <MudSkeleton Height="35px" Width="@GetVariableWidth()" Animation="Animation.Wave"/>
       }
       else
       {
@@ -24,6 +24,7 @@
               }
             </div>
           </MudTooltip> *@
+          <MudIcon Class="mr-1" Icon="@GetMealIcon()" Size="Size.Small"/>
         </div>
       }
     </CardHeaderContent>
@@ -49,23 +50,23 @@
     @if (Recipe == null)
     {
       <MudSkeleton Class="ml-2 mb-3" SkeletonType="SkeletonType.Rectangle" Width="25%" Height="2em"
-        Animation="Animation.Wave" />
+                   Animation="Animation.Wave"/>
     }
     else
     {
       <MudButton Color="Color.Primary" OnClick="ShowRecipeDialog">More Info</MudButton>
       <MudSpacer />
       <MudIconButton Class="mr-1" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete" OnClick="RemoveRecipe" />
+      <MudSpacer/>
+      <MudIconButton Class="pa-1" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete" OnClick="RemoveRecipe"/>
     }
   </MudCardActions>
 </MudCard>
 
 
 @code {
-  [Parameter]
-  public Recipe? Recipe { get; set; }
-  [Parameter]
-  public EventCallback OnRemoveRecipe { get; set; }
+  [Parameter] public Recipe? Recipe { get; set; }
+  [Parameter] public EventCallback OnRemoveRecipe { get; set; }
 
   DialogOptions CardMessageOptions = new DialogOptions() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
   Random random = new Random();
@@ -81,9 +82,9 @@
   private async void RemoveRecipe()
   {
     bool? result = await DialogService.ShowMessageBox(
-    "Remove from Pinned",
-    (MarkupString)$"Do you want to Remove <em>{Recipe!.Name}</em>?",
-    yesText: "Delete", cancelText: "Cancel", options: CardMessageOptions);
+      "Remove from Pinned",
+      (MarkupString)$"Do you want to Remove <em>{Recipe!.Name}</em>?",
+      yesText: "Delete", cancelText: "Cancel", options: CardMessageOptions);
 
     if (result != null)
     {
