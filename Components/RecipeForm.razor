@@ -17,7 +17,7 @@
                     Variant="Variant.Text" SelectionMode="SelectionMode.MultiSelection" Color="Color.Primary">
           @foreach (var meal in Enum.GetValues<Meal>())
           {
-            <MudChip Class="mr-5" Value="@meal" />
+            <MudChip Class="mr-5" Value="@meal" Text="@meal.ToString().ToUpper()"/>
           }
         </MudChipSet>
         <MudText style="font-weight: 600" Color="Color.Error">@_recipe.MealError</MudText>

@@ -4,9 +4,9 @@ namespace ingrEZ;
 
 public enum Meal
 {
-  BREAKFAST,
-  LUNCH,
-  DINNER,
+    Breakfast,
+    Lunch,
+    Dinner,
 }
 
 public class RecipeBuilder
