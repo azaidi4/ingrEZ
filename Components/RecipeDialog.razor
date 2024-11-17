@@ -15,7 +15,7 @@
 
     @if (Recipe.PinnedDate != null)
     {
-      <MudText><b>Added On: </b>@Recipe.PinnedDate.ToString()</MudText>
+      <MudText><b>Added On: </b>@Recipe.PinnedDate.Value.ToString("MMM d, hh:mm ttt")</MudText>
     }
 
     <br/>
