@@ -12,8 +12,8 @@ using ingrEZ.Data;
 namespace ingrEZ.Migrations
 {
     [DbContext(typeof(IngrEZDataContext))]
-    [Migration("20241102105417_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20241114221250_UpdateMealPlanRecipe")]
+    partial class UpdateMealPlanRecipe
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,58 @@ namespace ingrEZ.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+
+            modelBuilder.Entity("ingrEZ.Models.MealPlan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MealPlan");
+                });
+
+            modelBuilder.Entity("ingrEZ.Models.MealPlanRecipe", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("Meal")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MealPlanId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MealPlanId");
+
+                    b.HasIndex("RecipeId");
+
+                    b.ToTable("MealPlanRecipe");
+                });
 
             modelBuilder.Entity("ingrEZ.Models.Recipe", b =>
                 {
@@ -84,6 +136,28 @@ namespace ingrEZ.Migrations
                         .HasDatabaseName("idx_hash");
 
                     b.ToTable("Recipe");
+                });
+
+            modelBuilder.Entity("ingrEZ.Models.MealPlanRecipe", b =>
+                {
+                    b.HasOne("ingrEZ.Models.MealPlan", null)
+                        .WithMany("Recipes")
+                        .HasForeignKey("MealPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ingrEZ.Models.Recipe", "Recipe")
+                        .WithMany()
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Recipe");
+                });
+
+            modelBuilder.Entity("ingrEZ.Models.MealPlan", b =>
+                {
+                    b.Navigation("Recipes");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,8 +1,320 @@
 @page "/plans"
-@using ingrEZ.Components.Layout
+@using Microsoft.EntityFrameworkCore
+@using ingrEZ.Models
+@inject IDbContextFactory<Data.IngrEZDataContext> DbFactory
+@inject IDialogService DialogService
 
 <PageTitle>Meal Plans</PageTitle>
 
-<MudContainer Class="pb-20">
-  <NavTabs Selected="Tab.Plans" />
+<MudContainer Class="pb-10">
+  <NavTabs Selected="Tab.Plans"/>
 </MudContainer>
+
+<MudContainer>
+  <PlansDatePicker SelectedDate="_selectedDate" SelectedDateChanged="SelectedDateChanged"/>
+
+  <MudDropContainer Class="d-flex flex-column flex-wrap flex-grow-1" @ref="_dropContainer" T="MealPlanRecipe"
+                    Items="_mealPlanState.GetValueOrDefault(_selectedDate!.Value.ToShortDateString(), [])"
+                    ItemsSelector="ItemSelector" ItemDisabled="_ => !_editMode" ItemDropped="ItemUpdated"
+                    CanDrop="CanDropItem">
+    <ChildContent>
+      <MudPaper Class="mb-5 pb-2" Outlined Square
+                Style="border: 2px solid; border-top: 0; border-color: var(--mud-palette-lines-default);">
+        <div class="d-flex">
+          @foreach (var meal in Enum.GetValues<Meal>())
+          {
+            <MudDropZone T="MealPlanRecipe" Identifier=@meal.ToString()
+                         Class=@($"pa-4 ma-3 rounded-lg flex-grow-1 {(_editMode ? EditClass : "")}")>
+              <div class="d-flex">
+                <MudIcon Class="mr-1" Icon=@GetMealIcon(meal)/>
+                <MudText GutterBottom Typo="Typo.body1">@meal.ToString()</MudText>
+              </div>
+            </MudDropZone>
+          }
+        </div>
+
+        <div class="d-flex align-end mx-3">
+          <MudCollapse Expanded="_editMode">
+            <MudGrid>
+              <MudItem>
+                <MudTextField T="string" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Name" MaxLength="50"
+                              @bind-Value="_mealPlan.Name"/>
+                <MudDateRangePicker Margin="Margin.Dense" ReadOnly PlaceholderStart="Start Date"
+                                    PlaceholderEnd="End Date"
+                                    Variant=Variant.Outlined DateRange="GetDateRange()" DateFormat="dd MMMM yyyy"/>
+              </MudItem>
+
+              <MudItem Class="pt-10">
+                @foreach (var error in _mealPlanErrors)
+                {
+                  <MudText style="font-weight: 600" Color="Color.Error">@error</MudText>
+                }
+              </MudItem>
+            </MudGrid>
+          </MudCollapse>
+
+          <MudSpacer/>
+
+          @if (_editMode)
+          {
+            <MudButton StartIcon="@Icons.Material.Outlined.Close" Color="Color.Error" OnClick="ClearChanges">
+              Discard
+            </MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.Save" Color="Color.Secondary" OnClick="Submit">
+              Save
+            </MudButton>
+          }
+          else
+          {
+            <MudButton StartIcon="@Icons.Material.Outlined.Edit" Color="Color.Secondary" OnClick="ToggleEdit">
+              Edit
+            </MudButton>
+          }
+        </div>
+      </MudPaper>
+
+      <MudPaper Class="border-2 pa-4" Elevation="0">
+        @if (_mealPlanState.GetValueOrDefault(_selectedDate.Value.ToShortDateString(), []).Count == 0)
+        {
+          <div class="d-flex justify-center pa-5">
+            <MudProgressCircular Indeterminate/>
+          </div>
+        }
+        else
+        {
+          <MudDropZone Class="d-flex flex-row flex-wrap gap-3" T="MealPlanRecipe" Identifier=@string.Empty/>
+        }
+      </MudPaper>
+    </ChildContent>
+
+    <ItemRenderer>
+      <MudPaper
+        Class=@($"pa-4 my-1 flex-grow-0{(!_editMode ? "cursor-default" : "")}") Outlined>@context.Recipe.Name</MudPaper>
+    </ItemRenderer>
+  </MudDropContainer>
+</MudContainer>
+
+<MudText Align="Align.Center">@_selectedDate</MudText>
+
+@code {
+  private MealPlan _mealPlan = new();
+  private Dictionary<string, List<MealPlanRecipe>> _mealPlanState = new();
+
+  private DateTime? _selectedDate = DateTime.Today;
+
+  private IEnumerable<string> _mealPlanErrors = [];
+
+  private MudDropContainer<MealPlanRecipe>? _dropContainer;
+  private bool _editMode;
+  private const string EditClass = "rounded-lg border-2 border-dashed mud-border-lines-default mud-background-gray";
+
+  protected override async Task OnInitializedAsync()
+  {
+    var today = DateOnly.FromDateTime(_selectedDate!.Value);
+    await using var context = await DbFactory.CreateDbContextAsync();
+
+    _mealPlan = await context.MealPlan.Include(mealPlan => mealPlan.Recipes)
+      .ThenInclude(recipe => recipe.Recipe)
+      .DefaultIfEmpty()
+      .SingleAsync() ?? new MealPlan();
+    _mealPlanState[today.ToShortDateString()] = await GetStateRecipes(today);
+    _dropContainer!.Refresh();
+  }
+
+  private async Task ClearChanges()
+  {
+    var today = DateOnly.FromDateTime(_selectedDate!.Value);
+    await using var context = await DbFactory.CreateDbContextAsync();
+
+    _mealPlan = await context.MealPlan.Include(mealPlan => mealPlan.Recipes)
+      .ThenInclude(recipe => recipe.Recipe)
+      .DefaultIfEmpty()
+      .SingleAsync() ?? new MealPlan();
+    _mealPlanState.Clear();
+    _mealPlanState[today.ToShortDateString()] = await GetStateRecipes(today);
+    _dropContainer!.Refresh();
+    ToggleEdit();
+  }
+
+  private void ToggleEdit()
+  {
+    _editMode = !_editMode;
+    _dropContainer!.Refresh();
+  }
+
+
+  private async Task SelectedDateChanged(DateTime? date)
+  {
+    await Task.Yield();
+    _selectedDate = date;
+    var key = _selectedDate!.Value.ToShortDateString();
+
+    if (!_mealPlanState.ContainsKey(key))
+    {
+      _mealPlanState[key] = await GetStateRecipes(DateOnly.Parse(key));
+    }
+
+    StateHasChanged();
+    _dropContainer!.Refresh();
+  }
+
+  private bool ItemSelector(MealPlanRecipe item, string dropzone)
+    => item.Meal.ToString() == dropzone;
+
+  private bool CanDropItem(MealPlanRecipe recipe, string dropzoneIdentifier)
+  {
+    if (dropzoneIdentifier == "") return recipe.Meal.HasValue;
+
+    var updatedDateOnly = DateOnly.FromDateTime(_selectedDate!.Value);
+    var parsedMeal = Enum.Parse<Meal>(dropzoneIdentifier);
+
+    return !_mealPlan.Recipes.Any(r => r.Date == updatedDateOnly && r.Meal == parsedMeal);
+  }
+
+  private void ItemUpdated(MudItemDropInfo<MealPlanRecipe> dropItem)
+  {
+    var updatedKey = DateOnly.FromDateTime(_selectedDate!.Value).ToShortDateString();
+    var existingIndex = _mealPlanState[updatedKey].IndexOf(dropItem.Item!);
+
+    if (dropItem.DropzoneIdentifier == "")
+    {
+      _mealPlanState[updatedKey].RemoveAt(existingIndex);
+      _mealPlan.Recipes.RemoveAll(r => r.Id == dropItem.Item!.Id);
+      FindNewMinMaxDate();
+    }
+    else
+    {
+      _mealPlanErrors = [];
+
+      // Add a clone in source dropzone if item is dragged from it
+      if (!dropItem.Item!.Meal.HasValue)
+      {
+        var clone = new MealPlanRecipe { Recipe = dropItem.Item!.Recipe };
+        _mealPlanState[updatedKey].Insert(existingIndex, clone);
+      }
+
+      dropItem.Item!.Date = DateOnly.Parse(updatedKey);
+      dropItem.Item!.Meal = Enum.Parse<Meal>(dropItem.DropzoneIdentifier);
+
+      _mealPlan.StartDate = dropItem.Item!.Date < _mealPlan.StartDate ? dropItem.Item!.Date : _mealPlan.StartDate;
+      _mealPlan.EndDate = dropItem.Item!.Date > _mealPlan.EndDate ? dropItem.Item!.Date : _mealPlan.EndDate;
+      _mealPlan.Recipes.Add(dropItem.Item);
+    }
+
+    _dropContainer!.Refresh();
+  }
+
+  private async Task Submit()
+  {
+    var result = await _mealPlan._validator.ValidateAsync(_mealPlan);
+    if (!result.IsValid)
+    {
+      _mealPlanErrors = result.Errors.Select(e => e.ErrorMessage);
+    }
+    else
+    {
+      await using var context = await DbFactory.CreateDbContextAsync();
+      // Show message dialog if overlapping MealPlan found
+      if (await context.MealPlan.AnyAsync(m =>
+            m.Id != _mealPlan.Id && m.StartDate <= _mealPlan.EndDate && m.EndDate >= _mealPlan.StartDate))
+      {
+        await DialogService.ShowMessageBox(
+          $"Unable to Add {_mealPlan.Name}!",
+          (MarkupString)$"MealPlan <em>{_mealPlan.Name}</em> overlaps with an existing Meal Plan!",
+          options: new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true }, yesText: "OK");
+      }
+      else
+      {
+        for (var i = 0; i < _mealPlan.Recipes.Count; i++)
+        {
+          var r = await context.Recipe.FirstAsync(x => x.Id == _mealPlan.Recipes[i].Recipe.Id);
+          _mealPlan.Recipes[i].Recipe = r;
+        }
+
+        var existingRecipeIds = _mealPlan.Recipes.Select(r => r.Id).ToHashSet();
+        var missingMealPlanRecipes = context.MealPlanRecipe.Where(m => m.MealPlanId == _mealPlan.Id && !existingRecipeIds.Contains(m.Id));
+
+        context.MealPlanRecipe.RemoveRange(missingMealPlanRecipes);
+        context.MealPlan.Update(_mealPlan);
+        await context.SaveChangesAsync();
+
+        _mealPlanErrors = [];
+        _editMode = false;
+      }
+
+      StateHasChanged();
+    }
+  }
+
+  private async Task<List<MealPlanRecipe>> GetStateRecipes(DateOnly selectedDate)
+  {
+    await using var context = await DbFactory.CreateDbContextAsync();
+
+    if (_mealPlan.Id != 0)
+    {
+      var savedRecipes = await context.MealPlan.SelectMany(plan => plan.Recipes)
+        .Where(m => m.Date == selectedDate)
+        .Include(r => r.Recipe).ToListAsync();
+      var allRecipes = await context.Recipe.AsNoTracking().ToArrayAsync();
+
+      var mealPlanRecipes = new List<MealPlanRecipe>(savedRecipes);
+      mealPlanRecipes.AddRange(allRecipes.Select(recipe => new MealPlanRecipe { Recipe = recipe }));
+
+      return mealPlanRecipes;
+    }
+    else
+    {
+      var allRecipes = await context.Recipe.AsNoTracking().ToArrayAsync();
+      var mealPlanRecipes = new List<MealPlanRecipe>(_mealPlan.Recipes.Where(m => m.Date == selectedDate));
+      mealPlanRecipes.AddRange(allRecipes.Select(recipe => new MealPlanRecipe { Recipe = recipe }));
+
+      return mealPlanRecipes;
+    }
+  }
+
+  private void FindNewMinMaxDate()
+  {
+    var date = DateOnly.FromDateTime(_selectedDate!.Value);
+
+    if (_mealPlan.StartDate != date && _mealPlan.EndDate != date) return;
+    if (_mealPlan.StartDate == date) _mealPlan.StartDate = DateOnly.MaxValue;
+    if (_mealPlan.EndDate == date) _mealPlan.EndDate = DateOnly.MinValue;
+
+    foreach (var planRecipe in _mealPlan.Recipes)
+    {
+      if (!planRecipe.Meal.HasValue) continue;
+      _mealPlan.StartDate = planRecipe.Date < _mealPlan.StartDate ? planRecipe.Date : _mealPlan.StartDate;
+      _mealPlan.EndDate = planRecipe.Date > _mealPlan.EndDate ? planRecipe.Date : _mealPlan.EndDate;
+    }
+  }
+
+  private DateRange? GetDateRange()
+  {
+    if (_mealPlan.StartDate == DateOnly.MaxValue || _mealPlan.EndDate == DateOnly.MinValue) return null;
+
+    return new DateRange(_mealPlan.StartDate.ToDateTime(new TimeOnly()),
+      _mealPlan.EndDate.ToDateTime(new TimeOnly()));
+  }
+
+  private string GetMealIcon(Meal meal)
+    => meal switch
+    {
+      Meal.Breakfast => @Icons.Material.Outlined.EggAlt,
+      Meal.Lunch => @Icons.Material.Outlined.LunchDining,
+      _ => @Icons.Material.Outlined.DinnerDining
+    };
+
+}
+
+@* private async Task<IEnumerable<string>> Search(string value, CancellationToken token)
+{
+if (RecipeNames == null)
+return [];
+
+if (string.IsNullOrEmpty(value))
+return RecipeNames;
+
+await Task.Delay(0);
+
+return RecipeNames.Where(x => x.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+} *@

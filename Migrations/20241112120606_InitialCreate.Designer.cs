@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ingrEZ.Data;
 
@@ -11,9 +12,11 @@ using ingrEZ.Data;
 namespace ingrEZ.Migrations
 {
     [DbContext(typeof(IngrEZDataContext))]
-    partial class IngrEZDataContextModelSnapshot : ModelSnapshot
+    [Migration("20241112120606_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,7 +45,7 @@ namespace ingrEZ.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("MealPlan", (string)null);
+                    b.ToTable("MealPlan");
                 });
 
             modelBuilder.Entity("ingrEZ.Models.MealPlanRecipe", b =>
@@ -59,7 +62,7 @@ namespace ingrEZ.Migrations
                     b.Property<int?>("Meal")
                         .HasColumnType("int");
 
-                    b.Property<int>("MealPlanId")
+                    b.Property<int?>("MealPlanId")
                         .HasColumnType("int");
 
                     b.Property<int>("RecipeId")
@@ -71,7 +74,7 @@ namespace ingrEZ.Migrations
 
                     b.HasIndex("RecipeId");
 
-                    b.ToTable("MealPlanRecipe", (string)null);
+                    b.ToTable("MealPlanRecipe");
                 });
 
             modelBuilder.Entity("ingrEZ.Models.Recipe", b =>
@@ -132,16 +135,14 @@ namespace ingrEZ.Migrations
                     b.HasIndex("Hash")
                         .HasDatabaseName("idx_hash");
 
-                    b.ToTable("Recipe", (string)null);
+                    b.ToTable("Recipe");
                 });
 
             modelBuilder.Entity("ingrEZ.Models.MealPlanRecipe", b =>
                 {
                     b.HasOne("ingrEZ.Models.MealPlan", null)
                         .WithMany("Recipes")
-                        .HasForeignKey("MealPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("MealPlanId");
 
                     b.HasOne("ingrEZ.Models.Recipe", "Recipe")
                         .WithMany()
