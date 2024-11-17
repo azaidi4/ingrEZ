@@ -1,7 +1,7 @@
 @using Microsoft.EntityFrameworkCore
 @using ingrEZ.Models
 @inject IDialogService DialogService
-@inject IDbContextFactory<ingrEZ.Data.IngrEZDataContext> DbFactory
+@inject IDbContextFactory<Data.IngrEZDataContext> DbFactory
 
 <MudCard class="border-2 mr-5 full" Elevation="0" Style="height: 100%;">
   <MudCardHeader>
@@ -73,8 +73,8 @@
   [Parameter] public Recipe? Recipe { get; set; }
   [Parameter] public EventCallback OnRemoveRecipe { get; set; }
 
-  DialogOptions CardMessageOptions = new DialogOptions() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-  Random random = new Random();
+  DialogOptions _cardMessageOptions = new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+  Random _random = new();
 
   private Task ShowRecipeDialog()
   {
@@ -84,16 +84,16 @@
     return DialogService.ShowAsync<RecipeDialog>(Recipe!.Name, parameters, options);
   }
 
-  private async void RemoveRecipe()
+  private async Task RemoveRecipe()
   {
-    bool? result = await DialogService.ShowMessageBox(
+    var result = await DialogService.ShowMessageBox(
       "Remove from Pinned",
       (MarkupString)$"Do you want to Remove <em>{Recipe!.Name}</em>?",
-      yesText: "Delete", cancelText: "Cancel", options: CardMessageOptions);
+      yesText: "Delete", cancelText: "Cancel", options: _cardMessageOptions);
 
     if (result != null)
     {
-      using var context = DbFactory.CreateDbContext();
+      await using var context = await DbFactory.CreateDbContextAsync();
 
       context.Recipe.Remove(Recipe);
       await context.SaveChangesAsync();
@@ -102,24 +102,16 @@
   }
 
   private string GetMealIcon()
-  {
-    if (Recipe!.MealType == "Breakfast")
+    => Recipe!.MealType switch
     {
-      return @Icons.Material.Outlined.EggAlt;
-    }
-    else if (Recipe!.MealType == "Lunch")
-    {
-      return @Icons.Material.Outlined.LunchDining;
-    }
-    else
-    {
-      return @Icons.Material.Outlined.DinnerDining;
-    }
-  }
+      "Breakfast" => @Icons.Material.Outlined.EggAlt,
+      "Lunch" => @Icons.Material.Outlined.LunchDining,
+      _ => @Icons.Material.Outlined.DinnerDining
+    };
 
   private string GetVariableWidth(int min = 60, int max = 75)
   {
-    return $"{random.Next(min, max)}%";
+    return $"{_random.Next(min, max)}%";
   }
 
   private int PreperationLevel()
@@ -130,26 +122,21 @@
 
   private string FormatIngredients()
   {
-    if (Recipe!.Ingredients.Length <= 4)
+    if (Recipe!.Ingredients.Length > 4)
     {
-      return string.Join(", ", Recipe.Ingredients);
+      return $"{string.Join(", ", Recipe.Ingredients.Take(4))} + {Recipe.Ingredients.Length - 4} more";
     }
 
-    return $"{string.Join(", ", Recipe.Ingredients.Take(4))} + {Recipe.Ingredients.Length - 4} more";
+    return string.Join(", ", Recipe.Ingredients);
   }
 
   private Color DifficultyColor()
-  {
-    switch (Recipe!.Difficulty)
+    => Recipe!.Difficulty switch
     {
-      case "Easy":
-        return Color.Success;
-      case "Medium":
-        return Color.Warning;
-      case "Hard":
-        return Color.Error;
-      default:
-        return Color.Default;
-    }
-  }
+      "Easy" => Color.Success,
+      "Medium" => Color.Warning,
+      "Hard" => Color.Error,
+      _ => Color.Default
+    };
+
 }

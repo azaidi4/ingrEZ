@@ -17,15 +17,14 @@ public class RecipeBuilder
     public string? MealError { get; set; }
     public string? IngredientError { get; set; }
 
-    public RecipeBuilderValidator validator = new();
+    public RecipeBuilderValidator Validator = new();
 
     public void AddIngredient(string ingredient)
     {
-        if (!Ingredients.Contains(ingredient))
-        {
-            IngredientError = string.Empty;
-            Ingredients.Add(ingredient);
-        }
+        if (Ingredients.Contains(ingredient)) return;
+
+        IngredientError = string.Empty;
+        Ingredients.Add(ingredient);
     }
 
     public void RemoveIngredient(MudBlazor.MudChip<string> ingredient)

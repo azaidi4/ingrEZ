@@ -1,3 +1,5 @@
+namespace ingrEZ;
+
 public enum Tab
 {
     Pinned,

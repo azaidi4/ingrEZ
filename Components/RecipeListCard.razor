@@ -1,7 +1,7 @@
 @using Microsoft.EntityFrameworkCore
 @using ingrEZ.Models
 @inject IDialogService DialogService
-@inject IDbContextFactory<ingrEZ.Data.IngrEZDataContext> DbFactory
+@inject IDbContextFactory<Data.IngrEZDataContext> DbFactory
 
 <MudCard class="border-2 mr-5" Style="height: 100%;" Elevation="0">
   <MudCardHeader>
@@ -66,13 +66,13 @@
     {
       <MudButton Color="Color.Primary" OnClick="ShowRecipeDialog">More Info</MudButton>
       <MudSpacer/>
-      @if (saved)
+      @if (_saved)
       {
         <MudButton Class="mr-1" Color="Color.Primary" StartIcon="@Icons.Material.TwoTone.Check" Disabled>
           Added
         </MudButton>
       }
-      else if (exists)
+      else if (_exists)
       {
         <MudButton Class="mr-1" Color="Color.Error" StartIcon="@Icons.Material.TwoTone.ErrorOutline" Disabled>
           Already Exists
@@ -84,14 +84,6 @@
           Add
         </MudButton>
       }
-      @* <MudButtonGroup Class="mr-2" Color="Color.Primary">
-    <MudButton StartIcon="@Icons.Material.Outlined.Add" Size="Size.Small">Add To
-    </MudButton>
-    <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
-    <MudMenuItem>Pinned</MudMenuItem>
-    <MudMenuItem>Meal Plan</MudMenuItem>
-    </MudMenu>
-    </MudButtonGroup> *@
     }
   </MudCardActions>
 </MudCard>
@@ -100,9 +92,9 @@
 @code {
   [Parameter] public Recipe? Recipe { get; set; }
 
-  DialogOptions CardMessageOptions = new DialogOptions() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-  Random random = new Random();
-  bool saved, exists = false;
+  DialogOptions _cardMessageOptions = new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+  Random _random = new();
+  bool _saved, _exists;
 
   private Task ShowRecipeDialog()
   {
@@ -112,12 +104,12 @@
     return DialogService.ShowAsync<RecipeDialog>(Recipe!.Name, parameters, options);
   }
 
-  private async void AddRecipe()
+  private async Task AddRecipe()
   {
     bool? result = await DialogService.ShowMessageBox(
       "Add to Pinned",
       (MarkupString)$"Do you want to add <em>{Recipe!.Name}</em>?",
-      yesText: "Add", cancelText: "Cancel", options: CardMessageOptions);
+      yesText: "Add", cancelText: "Cancel", options: _cardMessageOptions);
 
     if (result != null)
     {
@@ -127,13 +119,13 @@
 
       if (recipeExists)
       {
-        exists = true;
+        _exists = true;
         StateHasChanged();
 
         await DialogService.ShowMessageBox(
           "Unable to Add to Pinned!",
           (MarkupString)$"<em>{Recipe!.Name}</em> already exists in your pinned recipes.",
-          options: CardMessageOptions);
+          options: _cardMessageOptions);
       }
       else
       {
@@ -141,31 +133,24 @@
         Recipe.Hash = recipeHash;
         context.Recipe.Add(Recipe);
         await context.SaveChangesAsync();
-        saved = true;
+        _saved = true;
         StateHasChanged();
       }
     }
   }
 
   private string GetMealIcon()
-  {
-    if (Recipe!.MealType == "Breakfast")
+    => Recipe!.MealType switch
     {
-      return @Icons.Material.Outlined.EggAlt;
-    }
-    else if (Recipe!.MealType == "Lunch")
-    {
-      return @Icons.Material.Outlined.LunchDining;
-    }
-    else
-    {
-      return @Icons.Material.Outlined.DinnerDining;
-    }
-  }
+      "Breakfast" => @Icons.Material.Outlined.EggAlt,
+      "Lunch" => @Icons.Material.Outlined.LunchDining,
+      _ => @Icons.Material.Outlined.DinnerDining
+    };
+
 
   private string GetVariableWidth(int min = 60, int max = 75)
   {
-    return $"{random.Next(min, max)}%";
+    return $"{_random.Next(min, max)}%";
   }
 
   private int PreperationLevel()
@@ -176,27 +161,22 @@
 
   private string FormatIngredients()
   {
-    if (Recipe!.Ingredients.Length <= 4)
+    if (Recipe!.Ingredients.Length > 4)
     {
-      return string.Join(", ", Recipe.Ingredients);
+      return $"{string.Join(", ", Recipe.Ingredients.Take(4))} + {Recipe.Ingredients.Length - 4} more";
     }
 
-    return $"{string.Join(", ", Recipe.Ingredients.Take(4))} + {Recipe.Ingredients.Length - 4} more";
+    return string.Join(", ", Recipe.Ingredients);
   }
 
   private Color DifficultyColor()
-  {
-    switch (Recipe!.Difficulty)
+    => Recipe!.Difficulty switch
     {
-      case "Easy":
-        return Color.Success;
-      case "Medium":
-        return Color.Warning;
-      case "Hard":
-        return Color.Error;
-      default:
-        return Color.Default;
-    }
-  }
+      "Easy" => Color.Success,
+      "Medium" => Color.Warning,
+      "Hard" => Color.Error,
+      _ => Color.Default
+    };
+
 
 }

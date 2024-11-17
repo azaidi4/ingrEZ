@@ -1,6 +1,5 @@
-@using System.Text.Json
 @using ingrEZ.Models
-@inject IConfiguration config
+@inject IConfiguration Config
 @inject IHttpClientFactory ClientFactory
 
 <div class="mt-n12 mb-1 d-flex justify-end">
@@ -17,7 +16,7 @@
 </div>
 
 <MudGrid Spacing="5" Justify="Justify.FlexStart">
-  @foreach (var geminiRecipe in recipes)
+  @foreach (var geminiRecipe in _recipes)
   {
     <MudItem xs="4">
       <RecipeListCard Recipe="@geminiRecipe"/>
@@ -29,53 +28,51 @@
   [Parameter] public RecipeBuilder Recipe { get; set; } = new();
   [Parameter] public EventCallback OnListClose { get; set; }
 
-  private bool shouldRender;
-  private Recipe[] recipes = [];
+  private bool _shouldRender;
+  private Recipe[] _recipes = [];
 
   async void CloseList()
   {
-    shouldRender = false;
+    _shouldRender = false;
     await OnListClose.InvokeAsync();
   }
 
-  protected override bool ShouldRender()
+  protected override bool ShouldRender() => _shouldRender;
+
+  protected override async Task OnInitializedAsync()
   {
-    return shouldRender;
+    _shouldRender = true;
+    await GenerateRecipes();
   }
 
-  private async void GenerateRecipes()
+  private async Task GenerateRecipes()
   {
-    var GeminiApiKey = config["Gemini:ApiKey"] ?? throw new Exception("GeminiApiKey not set");
+    var geminiApiKey = Config["Gemini:ApiKey"] ?? throw new Exception("GeminiApiKey not set");
     var client = ClientFactory.CreateClient("Gemini");
 
-    recipes = new Recipe[5];
+    _recipes = new Recipe[5];
 
     var requestBody = new RecipesRequestBodySchema
     {
       Contents = [new() { Role = "user", Parts = [new() { Text = BuildGeminiInput() }] }],
       SystemInstruction = new(),
-      GenerationConfig = new(),
+      GenerationConfig = new()
     };
 
-    var response = await client.PostAsJsonAsync($"v1beta/models/gemini-1.5-pro-002:generateContent?key={GeminiApiKey}",
-    requestBody);
+    var response = await client.PostAsJsonAsync($"v1beta/models/gemini-1.5-pro-002:generateContent?key={geminiApiKey}",
+      requestBody);
+
+    response.EnsureSuccessStatusCode();
 
     var responseJson = await response.Content.ReadFromJsonAsync<RecipeResponseSchema>();
-    
-    recipes = responseJson!.Candidates[0].Content.Parts[0].Text.Recipes;
+
+    _recipes = responseJson!.Candidates[0].Content.Parts[0].Text.Recipes;
     StateHasChanged();
   }
 
   private string BuildGeminiInput()
   {
-    return $"Meals: {String.Join(", ", Recipe.Meals)}. Ingredients: {String.Join(", ", Recipe.Ingredients)}";
-  }
-
-  protected override void OnInitialized()
-  {
-    Console.WriteLine("initialize list");
-    shouldRender = true;
-    GenerateRecipes();
+    return $"Meals: {string.Join(", ", Recipe.Meals)}. Ingredients: {String.Join(", ", Recipe.Ingredients)}";
   }
 
 }

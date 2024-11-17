@@ -1,7 +1,7 @@
 @page "/pinned"
 @using ingrEZ.Models
 @using Microsoft.EntityFrameworkCore
-@inject IDbContextFactory<ingrEZ.Data.IngrEZDataContext> DbFactory
+@inject IDbContextFactory<Data.IngrEZDataContext> DbFactory
 
 <PageTitle>Pinned Recipes</PageTitle>
 
@@ -9,7 +9,7 @@
   <NavTabs Selected="Tab.Pinned"/>
 </MudContainer>
 
-@if (pinnedRecipes == null || searchRecipes == null)
+@if (_pinnedRecipes == null || _searchRecipes == null)
 {
   <MudContainer Class="d-flex justify-center pt-20">
     <MudProgressCircular Indeterminate Color="Color.Secondary"/>
@@ -24,7 +24,7 @@ else
                     DebounceInterval="100"
                     OnDebounceIntervalElapsed="Search"/>
     </MudPaper>
-  @if (searchRecipes.Count() == 0)
+    @if (!_searchRecipes.Any())
     {
       <MudContainer Class="d-flex justify-center pt-20">
         <MudCard Class="px-10 py-8" Elevation="0">
@@ -38,7 +38,7 @@ else
     else
     {
       <MudGrid Spacing="5" Justify="Justify.FlexStart">
-        @foreach (var recipe in searchRecipes)
+        @foreach (var recipe in _searchRecipes)
         {
           <MudItem xs="6" md="4" lg="3">
             <PinnedListCard Recipe="@recipe" OnRemoveRecipe="GetAllRecipes"/>
@@ -50,26 +50,26 @@ else
 }
 
 @code {
-  private Recipe[]? pinnedRecipes;
-  private IEnumerable<Recipe>? searchRecipes;
+  private Recipe[]? _pinnedRecipes;
+  private IEnumerable<Recipe>? _searchRecipes;
   private string SearchText { get; set; } = string.Empty;
 
-  protected override void OnInitialized()
+  protected override async Task OnInitializedAsync()
   {
-    GetAllRecipes();
+    await GetAllRecipes();
   }
 
-  private void GetAllRecipes()
+  private async Task GetAllRecipes()
   {
-    using var context = DbFactory.CreateDbContext();
-    pinnedRecipes = context.Recipe.OrderByDescending(s => s.PinnedDate).ToArray();
-    searchRecipes = pinnedRecipes;
+    await using var context = await DbFactory.CreateDbContextAsync();
+    _pinnedRecipes = await context.Recipe.OrderByDescending(s => s.PinnedDate).ToArrayAsync();
+    _searchRecipes = _pinnedRecipes;
     StateHasChanged();
   }
 
   protected void Search()
   {
-    searchRecipes = pinnedRecipes!.Where(recipe =>
+    _searchRecipes = _pinnedRecipes!.Where(recipe =>
       recipe.Name.Contains(SearchText, StringComparison.InvariantCultureIgnoreCase));
   }
 
