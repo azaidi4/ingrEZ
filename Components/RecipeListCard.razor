@@ -45,14 +45,14 @@
     }
     else
     {
-      <MudText Typo="Typo.body1" class="d-flex align-center">
-        <MudIcon Icon="@GetMealIcon()" class="mr-1" />
-        @Recipe.MealType
-      </MudText>
-      <MudText Typo="Typo.body1" Color="@DifficultyColor()">@Recipe.Difficulty</MudText>
-      <MudText Typo="Typo.body1">@($"{Recipe.ServingSize} Servings")</MudText>
-      <br />
-      <MudText Typo="Typo.body1">@FormatIngredients()</MudText>
+      <div class="d-flex align-start">
+        <MudIcon Icon="@GetMealIcon()" class="mr-1"/>
+        <MudText Typo="Typo.body2">@Recipe.MealType</MudText>
+      </div>
+      <MudText Typo="Typo.body2" Color="@DifficultyColor()">@Recipe.Difficulty</MudText>
+      <MudText Typo="Typo.body2">@($"{Recipe.ServingSize} Servings")</MudText>
+      <br/>
+      <MudText Typo="Typo.body2">@FormatIngredients()</MudText>
     }
   </MudCardContent>
 
