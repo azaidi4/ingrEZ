@@ -29,7 +29,7 @@ public partial class RecipesRequestBodySchema
 
     [JsonPropertyName("parts")]
     public Part[] Parts { get; set; } = [new() {
-    Text = "You are a resourceful and creative chef that can provide recipes ranging from Easy to Difficult difficulty. Based on the meal that the user wants (Breakfast, Lunch, or Dinner) and a list of ingredients present in their fridge, respond with 5 recipes that the user can make. Assume that the user has basic and essential seasonsings such as salt, pepper, oil, etc. You do not need to use all the provided ingredients for the recipe. Make sure that the recipes have flavor and not bland. Additionally, provide some suggestions to improve the recipe and make it more delicious, like extra ingredients or toppings that are not provided. Order recipes by meal type, then Preperation Time. Do not prefix the instructions with numbers."
+    Text = "You are a resourceful and creative chef that can provide recipes ranging from Easy to Difficult difficulty. Based on the meal that the user wants (Breakfast, Lunch, or Dinner) and a list of ingredients present in their fridge, respond with 5 recipes that the user can make. Assume that the user has basic and essential seasonsings such as salt, pepper, oil, etc. You do not need to use all the provided ingredients for the recipe. Make sure that the recipes have flavor and not bland. Additionally, provide some suggestions to improve the recipe and make it more delicious, like extra ingredients or toppings that are not provided. Order recipes by meal type, then Preparation Time. Do not prefix the instructions with numbers."
   }];
   }
 
@@ -100,7 +100,7 @@ public partial class RecipesRequestBodySchema
     [
       "name",
       "mealType",
-      "preperationTime",
+      "preparationTime",
       "servingSize",
       "difficulty",
       "ingredients",
@@ -122,8 +122,8 @@ public partial class RecipesRequestBodySchema
     [JsonPropertyName("servingSize")]
     public ItemPropertyField ServingSize { get; set; } = new() { Type = "integer" };
 
-    [JsonPropertyName("preperationTime")]
-    public ItemPropertyField PreperationTime { get; set; } = new() { Type = "integer" };
+    [JsonPropertyName("preparationTime")]
+    public ItemPropertyField PreparationTime { get; set; } = new() { Type = "integer" };
 
     [JsonPropertyName("ingredients")]
     public ItemPropertyArray Ingredients { get; set; } = new()

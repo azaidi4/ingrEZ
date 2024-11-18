@@ -32,8 +32,8 @@ public class Recipe
   [JsonPropertyName("servingSize")]
   public int ServingSize { get; set; }
 
-  [JsonPropertyName("preperationTime")]
-  public int PreperationTime { get; set; }
+  [JsonPropertyName("preparationTime")]
+  public int PreparationTime { get; set; }
 
   [JsonPropertyName("ingredients")]
   public string[] Ingredients { get; set; } = [];
