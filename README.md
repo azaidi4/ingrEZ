@@ -1,3 +1,11 @@
-# ingrEZ
+# ingr<span style="color:green">EZ</span>
+Recipe Generation made <span style="color:green">*EZ*</span> with AI!
 
-![](https://github.com/azaidi4/azaidi4.github.io/blob/master/images/projects/ingrEZ.png?raw=true)
+## Screenshots
+![](Screenshots/new.png)
+
+![](Screenshots/new_dialog.png)
+
+![](Screenshots/pinned.png)
+
+![](Screenshots/plans.png)
