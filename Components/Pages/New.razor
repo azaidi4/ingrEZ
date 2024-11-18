@@ -1,0 +1,56 @@
+@page "/new"
+@using FluentValidation.Results
+@inject IConfiguration config
+
+<PageTitle>New Recipe</PageTitle>
+
+@if (selectedComponent != null)
+{
+  <MudContainer Class="@(selectedComponent.Type == typeof(RecipeForm) ? "pb-20" : "pb-10")">
+    <NavTabs Selected="Tab.New" />
+  </MudContainer>
+
+  <MudContainer>
+    <DynamicComponent Type="@selectedComponent.Type" Parameters="@selectedComponent.Parameters" />
+  </MudContainer>
+}
+
+@code {
+
+  private ComponentMetadata? selectedComponent;
+  private RecipeBuilder recipe = new();
+
+  private Dictionary<string, ComponentMetadata> components => new()
+    {
+      [nameof(RecipeForm)] = new ComponentMetadata()
+      {
+        Type = typeof(RecipeForm),
+        Parameters = { [nameof(RecipeForm.OnRecipeFormSubmit)] = EventCallback.Factory.Create<RecipeBuilder>(this,
+OnRecipeFormSubmit) }
+      },
+      [nameof(RecipeList)] = new ComponentMetadata()
+      {
+        Type = typeof(RecipeList),
+        Parameters = { [nameof(RecipeList.OnListClose)] = EventCallback.Factory.Create(this,
+CloseList), [nameof(RecipeList.Recipe)] = recipe }
+      },
+    };
+
+
+  private void OnRecipeFormSubmit(RecipeBuilder recieved)
+  {
+    recipe = recieved;
+    selectedComponent = components[nameof(RecipeList)];
+  }
+
+  private void CloseList()
+  {
+    Console.WriteLine("close list");
+    selectedComponent = components[nameof(RecipeForm)];
+  }
+
+  protected override void OnInitialized()
+  {
+    selectedComponent = components[nameof(RecipeForm)];
+  }
+}

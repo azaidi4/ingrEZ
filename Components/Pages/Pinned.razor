@@ -1,0 +1,76 @@
+@page "/pinned"
+@using ingrEZ.Models
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<Data.IngrEZDataContext> DbFactory
+
+<PageTitle>Pinned Recipes</PageTitle>
+
+<MudContainer Class="pb-8">
+  <NavTabs Selected="Tab.Pinned"/>
+</MudContainer>
+
+@if (_pinnedRecipes == null || _searchRecipes == null)
+{
+  <MudContainer Class="d-flex justify-center pt-20">
+    <MudProgressCircular Indeterminate Color="Color.Secondary"/>
+  </MudContainer>
+}
+else
+{
+  <MudContainer Class="d-flex flex-column align-center">
+    <MudPaper Class="mb-8 mr-5" MinWidth="400px" Elevation="0">
+      <MudTextField @bind-Value="SearchText" Variant="Variant.Outlined" Margin="Margin.None" Adornment="Adornment.End"
+                    AdornmentIcon="@Icons.Material.TwoTone.Search" Placeholder="Search Recipes" Clearable
+                    DebounceInterval="100"
+                    OnDebounceIntervalElapsed="Search"/>
+    </MudPaper>
+    @if (!_searchRecipes.Any())
+    {
+      <MudContainer Class="d-flex justify-center pt-20">
+        <MudCard Class="px-10 py-8" Elevation="0">
+          <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom>No Pinned Recipes Found.</MudText>
+          <MudText Typo="Typo.h4">To Pin Recipes, Go to
+            <MudLink Href="/new" Typo="Typo.h4">New</MudLink>
+          </MudText>
+        </MudCard>
+      </MudContainer>
+    }
+    else
+    {
+      <MudGrid Spacing="5" Justify="Justify.FlexStart">
+        @foreach (var recipe in _searchRecipes)
+        {
+          <MudItem xs="6" md="4" lg="3">
+            <PinnedListCard Recipe="@recipe" OnRemoveRecipe="GetAllRecipes"/>
+          </MudItem>
+        }
+      </MudGrid>
+    }
+  </MudContainer>
+}
+
+@code {
+  private Recipe[]? _pinnedRecipes;
+  private IEnumerable<Recipe>? _searchRecipes;
+  private string SearchText { get; set; } = string.Empty;
+
+  protected override async Task OnInitializedAsync()
+  {
+    await GetAllRecipes();
+  }
+
+  private async Task GetAllRecipes()
+  {
+    await using var context = await DbFactory.CreateDbContextAsync();
+    _pinnedRecipes = await context.Recipe.OrderByDescending(s => s.PinnedDate).ToArrayAsync();
+    _searchRecipes = _pinnedRecipes;
+    StateHasChanged();
+  }
+
+  protected void Search()
+  {
+    _searchRecipes = _pinnedRecipes!.Where(recipe =>
+      recipe.Name.Contains(SearchText, StringComparison.InvariantCultureIgnoreCase));
+  }
+
+}

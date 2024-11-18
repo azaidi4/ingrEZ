@@ -1,0 +1,185 @@
+<MudPaper Class="d-flex align-center pa-2 border-2" Square Elevation="0">
+  <MudIconButton Class="mr-1" DropShadow="false" Icon="@Icons.Material.Filled.ChevronLeft" Color="Color.Secondary"
+                 Variant="Variant.Filled" OnClick="() => GoToMonth(-1)"/>
+
+  <MudIconButton Class="mr-2" DropShadow="false" Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Secondary"
+                 Variant="Variant.Filled" OnClick="() => GoToMonth(1)"/>
+
+  <MudButton DropShadow="false"
+             EndIcon="@(_openPopover ? @Icons.Material.Filled.ArrowDropUp : @Icons.Material.Filled.ArrowDropDown)"
+             Color="Color.Secondary" Variant="Variant.Filled" OnClick="ToggleOpen">
+    @(SelectedDate!.Value.ToString("d MMMM yyyy"))
+
+    <MudPopover Open="_openPopover" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
+      <MudDatePicker OpenTo="OpenTo.Month" PickerVariant="PickerVariant.Static" Color="Color.Secondary" Editable
+                     FixDay="SelectedDate.Value.Day" PickerMonth="SelectedDate" Date="SelectedDate"
+                     DateChanged="SelectedDateChanged" PickerMonthChanged="SelectedDateChanged"
+                     MinDate="_minDate" MaxDate="_maxDate"/>
+    </MudPopover>
+
+  </MudButton>
+
+  <MudIconButton Class="ml-2 pa-1" DropShadow="false" Disabled="@(SelectedDate == DateTime.Today)"
+                 Icon="@Icons.Material.Filled.Refresh" Color="Color.Secondary" Size="Size.Medium" OnClick="ResetDate"/>
+
+  <MudSpacer/>
+
+  <MudIconButton Class="mr-1 pa-1" Icon="@Icons.Material.Filled.ChevronLeft" DropShadow="false" Color="Color.Secondary"
+                 OnClick="GoToLastWeek"/>
+
+  <MudButton Class="mr-1 cursor-default" DropShadow="false" Variant="Variant.Filled" Color="Color.Secondary">
+    Week @(GetWeekNumber())
+  </MudButton>
+
+  <MudIconButton Class="pa-1" Icon="@Icons.Material.Filled.ChevronRight" DropShadow="false" Color="Color.Secondary"
+                 OnClick="GoToNextWeek"/>
+</MudPaper>
+
+<MudPaper Class="d-flex flex-column border-x-2 border-b-2" Square Elevation="0">
+  <MudGrid Justify="Justify.SpaceEvenly">
+    @foreach (var day in GetWeekRange())
+    {
+      <MudItem>
+        <MudTooltip Class="mt-n1" Text=@(day.ToString("dd MMM")) Delay="250">
+          <MudButton Style="font-family: Fugaz One, Helvetica, Arial, sans-serif; font-size: 1rem;"
+                     Color="DayColor(day)" Ripple="false"
+                     OnClick="() => GoToDay(day.Day - SelectedDate!.Value.Day)">
+            @day.DayOfWeek
+          </MudButton>
+        </MudTooltip>
+      </MudItem>
+    }
+  </MudGrid>
+</MudPaper>
+
+@code {
+  [Parameter] public DateTime? SelectedDate { get; set; } = DateTime.Today;
+  [Parameter] public EventCallback<DateTime?> SelectedDateChanged { get; set; }
+
+  private bool _openPopover;
+
+  private DateTime _minDate = new(DateTime.Today.Year, 1, 1);
+  private DateTime _maxDate = new(DateTime.Today.Year + 1, 12, 31);
+  private List<DateRange> _weeks = [];
+
+  private void ToggleOpen() => _openPopover = !_openPopover;
+
+  private void GoToMonth(int month)
+  {
+    if (SelectedDate!.Value.AddMonths(month) < _minDate || SelectedDate!.Value.AddMonths(month) > _maxDate)
+    {
+      return;
+    }
+
+    SelectedDate = SelectedDate!.Value.AddMonths(month);
+    SelectedDateChanged.InvokeAsync(SelectedDate);
+  }
+
+  private void GoToDay(int days)
+  {
+    SelectedDate = SelectedDate!.Value.AddDays(days);
+    SelectedDateChanged.InvokeAsync(SelectedDate);
+  }
+
+  private void GoToLastWeek()
+  {
+    if (GetWeekRange().First().AddDays(-1) < _minDate)
+    {
+      return;
+    }
+
+    SelectedDate = GetWeekRange().First().AddDays(-1);
+    SelectedDateChanged.InvokeAsync(SelectedDate);
+  }
+
+  private void GoToNextWeek()
+  {
+    if (GetWeekRange().Last().AddDays(1) > _maxDate)
+    {
+      return;
+    }
+
+    SelectedDate = GetWeekRange().Last().AddDays(1);
+    SelectedDateChanged.InvokeAsync(SelectedDate);
+  }
+
+  private void ResetDate()
+  {
+    SelectedDate = DateTime.Today;
+    SelectedDateChanged.InvokeAsync(SelectedDate);
+  }
+
+  private void GetWeeksInMonth()
+  {
+    DateTime firstDayOfMonth = new DateTime(SelectedDate!.Value.Year, SelectedDate!.Value.Month, 1);
+    DateTime lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+    DateTime currentStartOfWeek = firstDayOfMonth;
+    DateTime endOfWeek = firstDayOfMonth;
+
+    _weeks.Clear();
+
+    while (endOfWeek <= lastDayOfMonth)
+    {
+      if (endOfWeek.DayOfWeek == DayOfWeek.Sunday || endOfWeek == lastDayOfMonth)
+      {
+        _weeks.Add(new DateRange() { Start = currentStartOfWeek, End = endOfWeek });
+        currentStartOfWeek = endOfWeek.AddDays(1);
+      }
+
+      endOfWeek = endOfWeek.AddDays(1);
+    }
+  }
+
+  private int GetWeekNumber()
+  {
+    if (_weeks.Count == 0 || SelectedDate < _weeks.First().Start || SelectedDate > _weeks.Last().End)
+    {
+      GetWeeksInMonth();
+    }
+
+    for (int i = 0; i < _weeks.Count; i++)
+    {
+      if (SelectedDate >= _weeks[i].Start && SelectedDate <= _weeks[i].End)
+      {
+        return i + 1;
+      }
+    }
+
+    return -1;
+  }
+
+  private IEnumerable<DateTime> GetWeekRange()
+  {
+    List<DateTime> weekRange = [];
+    DateRange selectedRange = new();
+
+    foreach (var selectedWeek in _weeks)
+    {
+      if (SelectedDate >= selectedWeek.Start && SelectedDate <= selectedWeek.End)
+      {
+        selectedRange = selectedWeek;
+      }
+    }
+
+    DateTime counter = selectedRange.Start!.Value;
+    while (counter <= selectedRange.End!.Value)
+    {
+      weekRange.Add(counter);
+      counter = counter.AddDays(1);
+    }
+
+    return weekRange;
+  }
+
+  private Color DayColor(DateTime day)
+  {
+    if (day == SelectedDate!.Value)
+    {
+      return Color.Primary;
+    }
+
+    return day == DateTime.Today ? Color.Secondary : default;
+  }
+
+}

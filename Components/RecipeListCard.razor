@@ -1,0 +1,182 @@
+@using Microsoft.EntityFrameworkCore
+@using ingrEZ.Models
+@inject IDialogService DialogService
+@inject IDbContextFactory<Data.IngrEZDataContext> DbFactory
+
+<MudCard class="border-2 mr-5" Style="height: 100%;" Elevation="0">
+  <MudCardHeader>
+    <CardHeaderContent>
+      @if (Recipe == null)
+      {
+        <MudSkeleton Height="35px" Width="@GetVariableWidth()" Animation="Animation.Wave"/>
+      }
+      else
+      {
+        <MudText Typo="Typo.body1" Style="line-height: 1.2em;"><b>@Recipe.Name</b></MudText>
+      }
+    </CardHeaderContent>
+    <CardHeaderActions>
+      @if (Recipe == null)
+      {
+        <MudSkeleton class="mt-2 mr-1" Height="35px" Width="25px" Animation="Animation.Wave"/>
+      }
+      else
+      {
+        <div class="mt-3 mx-2">
+          <MudTooltip Text="@($"{Recipe.PreparationTime} min")" Placement="Placement.Top" Arrow>
+            @for (int i = 0; i < PreparationLevel(); i++)
+            {
+              <MudIcon Class="mx-n1" Icon="@Icons.Material.TwoTone.HourglassFull" Size="Size.Small"/>
+            }
+          </MudTooltip>
+        </div>
+      }
+    </CardHeaderActions>
+  </MudCardHeader>
+
+  <MudCardContent>
+    @if (Recipe == null)
+    {
+      <MudSkeleton Width="@GetVariableWidth(min: 35, max: 60)" Height="25px" Animation="Animation.Wave"/>
+      <MudSkeleton Width="@GetVariableWidth(min: 35, max: 60)" Height="25px" Animation="Animation.Wave"/>
+      <MudSkeleton Width="@GetVariableWidth(min: 35, max: 60)" Height="25px" Animation="Animation.Wave"/>
+      <br/>
+      <MudSkeleton Width="@GetVariableWidth(min: 70, max: 100)" Height="25px" Animation="Animation.Wave"/>
+    }
+    else
+    {
+      <div class="d-flex align-start">
+        <MudIcon Icon="@GetMealIcon()" class="mr-1"/>
+        <MudText Typo="Typo.body2">@Recipe.MealType</MudText>
+      </div>
+      <MudText Typo="Typo.body2" Color="@DifficultyColor()">@Recipe.Difficulty</MudText>
+      <MudText Typo="Typo.body2">@($"{Recipe.ServingSize} Servings")</MudText>
+      <br/>
+      <MudText Typo="Typo.body2">@FormatIngredients()</MudText>
+    }
+  </MudCardContent>
+
+  <MudCardActions>
+    @if (Recipe == null)
+    {
+      <MudSkeleton Class="ml-2 mb-3" SkeletonType="SkeletonType.Rectangle" Width="25%" Height="2em"
+                   Animation="Animation.Wave"/>
+    }
+    else
+    {
+      <MudButton Color="Color.Primary" OnClick="ShowRecipeDialog">More Info</MudButton>
+      <MudSpacer/>
+      @if (_saved)
+      {
+        <MudButton Class="mr-1" Color="Color.Primary" StartIcon="@Icons.Material.TwoTone.Check" Disabled>
+          Added
+        </MudButton>
+      }
+      else if (_exists)
+      {
+        <MudButton Class="mr-1" Color="Color.Error" StartIcon="@Icons.Material.TwoTone.ErrorOutline" Disabled>
+          Already Exists
+        </MudButton>
+      }
+      else
+      {
+        <MudButton Class="mr-1" Color="Color.Primary" StartIcon="@Icons.Material.TwoTone.Add" OnClick="AddRecipe">
+          Add
+        </MudButton>
+      }
+    }
+  </MudCardActions>
+</MudCard>
+
+
+@code {
+  [Parameter] public Recipe? Recipe { get; set; }
+
+  DialogOptions _cardMessageOptions = new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+  Random _random = new();
+  bool _saved, _exists;
+
+  private Task ShowRecipeDialog()
+  {
+    var options = new DialogOptions() { CloseButton = true, FullWidth = true };
+    var parameters = new DialogParameters<RecipeDialog> { { x => x.Recipe, Recipe } };
+
+    return DialogService.ShowAsync<RecipeDialog>(Recipe!.Name, parameters, options);
+  }
+
+  private async Task AddRecipe()
+  {
+    bool? result = await DialogService.ShowMessageBox(
+      "Add to Pinned",
+      (MarkupString)$"Do you want to add <em>{Recipe!.Name}</em>?",
+      yesText: "Add", cancelText: "Cancel", options: _cardMessageOptions);
+
+    if (result != null)
+    {
+      var recipeHash = Recipe.ComputeHash();
+      using var context = DbFactory.CreateDbContext();
+      bool recipeExists = await context.Recipe.AnyAsync(r => r.Hash == recipeHash);
+
+      if (recipeExists)
+      {
+        _exists = true;
+        StateHasChanged();
+
+        await DialogService.ShowMessageBox(
+          "Unable to Add to Pinned!",
+          (MarkupString)$"<em>{Recipe!.Name}</em> already exists in your pinned recipes.",
+          options: _cardMessageOptions);
+      }
+      else
+      {
+        Recipe.PinnedDate = DateTime.Now;
+        Recipe.Hash = recipeHash;
+        context.Recipe.Add(Recipe);
+        await context.SaveChangesAsync();
+        _saved = true;
+        StateHasChanged();
+      }
+    }
+  }
+
+  private string GetMealIcon()
+    => Recipe!.MealType switch
+    {
+      "Breakfast" => @Icons.Material.Outlined.EggAlt,
+      "Lunch" => @Icons.Material.Outlined.LunchDining,
+      _ => @Icons.Material.Outlined.DinnerDining
+    };
+
+
+  private string GetVariableWidth(int min = 60, int max = 75)
+  {
+    return $"{_random.Next(min, max)}%";
+  }
+
+  private int PreparationLevel()
+  {
+    var result = Math.Min(Recipe!.PreparationTime / 15, 3);
+    return result > 0 ? result : 1;
+  }
+
+  private string FormatIngredients()
+  {
+    if (Recipe!.Ingredients.Length > 4)
+    {
+      return $"{string.Join(", ", Recipe.Ingredients.Take(4))} + {Recipe.Ingredients.Length - 4} more";
+    }
+
+    return string.Join(", ", Recipe.Ingredients);
+  }
+
+  private Color DifficultyColor()
+    => Recipe!.Difficulty switch
+    {
+      "Easy" => Color.Success,
+      "Medium" => Color.Warning,
+      "Hard" => Color.Error,
+      _ => Color.Default
+    };
+
+
+}

@@ -1,0 +1,124 @@
+@using FluentValidation.Results
+@inject IConfiguration Config
+
+<MudForm Class="d-flex align-center" Model="@_recipe" @ref="@_form" Validation="@(_recipe.Validator.ValidateValue)">
+  <MudGrid Justify="Justify.SpaceEvenly">
+    <MudItem Class="mb-10" xs="5">
+      <MudPaper Class="pa-2 border-2" Elevation="0">
+        <MudText Typo="Typo.h4" Align="Align.Center">
+          What are you <span style="color: var(--mud-palette-primary);">feeling?</span>
+        </MudText>
+      </MudPaper>
+    </MudItem>
+
+    <MudItem xs="4">
+      <MudPaper Class="pa-2" Elevation="0">
+        <MudChipSet T="Meal" SelectedValues="@_recipe.Meals" SelectedValuesChanged="_recipe.AddMeals"
+                    Variant="Variant.Text" SelectionMode="SelectionMode.MultiSelection" Color="Color.Primary">
+          @foreach (var meal in Enum.GetValues<Meal>())
+          {
+            <MudChip Class="mr-5" Value="@meal" Text="@meal.ToString().ToUpper()"/>
+          }
+        </MudChipSet>
+        <MudText style="font-weight: 600" Color="Color.Error">@_recipe.MealError</MudText>
+      </MudPaper>
+    </MudItem>
+
+    <MudFlexBreak/>
+
+    <MudItem Class="mb-10" xs="5">
+      <MudPaper Class="pa-2 border-2" Elevation="0">
+        <MudText Typo="Typo.h4" Align="Align.Center">
+          What's in the <span style="color: var(--mud-palette-primary);">fridge?</span>
+        </MudText>
+      </MudPaper>
+    </MudItem>
+
+    <MudItem xs="4">
+      <MudPaper Class="pa-2" Elevation="0">
+        <MudAutocomplete T="string" Placeholder="Add your ingredients" Value="null" ValueChanged="_recipe.AddIngredient"
+                         SearchFunc="@_ingredientSearch!.SearchIngredients" ShowProgressIndicator
+                         AdornmentIcon="@Icons.Material.Outlined.Search"/>
+        <MudText style="font-weight: 600" Color="Color.Error">@_recipe.IngredientError</MudText>
+      </MudPaper>
+    </MudItem>
+
+    <MudFlexBreak/>
+
+    <MudItem xs=" 5">
+      <MudPaper Class="pa-2 border-2" MinHeight="220px" Elevation="0">
+        <MudText Typo="Typo.h6" GutterBottom Align="Align.Center" Style="font-weight: bold;">
+          Added Ingredients
+        </MudText>
+        @if (_recipe.Ingredients.Count == 0)
+        {
+          <MudContainer Class="px-10 ">
+            <MudSkeleton SkeletonType="SkeletonType.Text" Width="100%"/>
+            <MudSkeleton SkeletonType="SkeletonType.Text" Width="100%"/>
+            <MudSkeleton SkeletonType="SkeletonType.Text" Width="100%"/>
+          </MudContainer>
+        }
+        else
+          @foreach (var item in _recipe.Ingredients)
+        {
+          <MudChip T="string" Value="@item" OnClose="_recipe.RemoveIngredient"/>
+        }
+      </MudPaper>
+    </MudItem>
+    <MudItem xs="4">
+      <MudButton Variant="Variant.Filled" OnClick="DebugFillForm">Debug Form</MudButton>
+    </MudItem>
+
+    <MudFlexBreak/>
+
+    <MudItem xs="6" Class="pt-15" Style="text-align: center;">
+      <MudButton Variant="Variant.Filled" DropShadow="false" StartIcon="@Icons.Material.TwoTone.Restaurant"
+                 Size="Size.Large" Color="Color.Primary" OnClick="Submit">
+        Find Recipes
+      </MudButton>
+    </MudItem>
+  </MudGrid>
+</MudForm>
+
+@code {
+  [Parameter] public EventCallback<RecipeBuilder> OnRecipeFormSubmit { get; set; }
+
+  private MudForm? _form;
+  private IngredientSearch? _ingredientSearch;
+  private RecipeBuilder _recipe = new();
+
+  bool _shouldRender;
+
+  protected override bool ShouldRender() => _shouldRender;
+
+  protected override void OnInitialized()
+  {
+    _shouldRender = true;
+    _ingredientSearch = new IngredientSearch(Config["Algolia:ApplicationId"], Config["Algolia:SearchApiKey"]);
+  }
+
+  private async Task Submit()
+  {
+    var result = await _recipe.Validator.ValidateAsync(_recipe);
+
+    if (!result.IsValid)
+    {
+      _recipe.MealError = result.Errors.FirstOrDefault<ValidationFailure>(error => error.PropertyName ==
+                                                                                   "Meals")?.ErrorMessage;
+      _recipe.IngredientError = result.Errors.FirstOrDefault<ValidationFailure>(error => error.PropertyName ==
+                                                                                         "Ingredients")?.ErrorMessage;
+    }
+    else
+    {
+      await OnRecipeFormSubmit.InvokeAsync(_recipe);
+      _shouldRender = false;
+    }
+  }
+
+  private void DebugFillForm()
+  {
+    _recipe.Ingredients = ["Chicken", "Carrot", "Egg", "Rice"];
+    _recipe.Meals = [Meal.Breakfast, Meal.Dinner];
+  }
+
+}

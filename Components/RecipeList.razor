@@ -1,0 +1,78 @@
+@using ingrEZ.Models
+@inject IConfiguration Config
+@inject IHttpClientFactory ClientFactory
+
+<div class="mt-n12 mb-1 d-flex justify-end">
+  <MudPaper Class="mr-5" Elevation="0">
+    <MudTooltip Class="mt-1" Text="Recreate Recipes" Placement="Placement.Top" Delay="500">
+      <MudIconButton Class="pa-2" Icon="@Icons.Material.TwoTone.Refresh" Variant="Variant.Filled"
+                     Color="Color.Secondary" OnClick="GenerateRecipes"/>
+    </MudTooltip>
+    <MudTooltip Class="mt-1" Text="Go Back" Placement="Placement.Top" Delay="500">
+      <MudIconButton Class="pa-2" Icon="@Icons.Material.TwoTone.Close" Variant="Variant.Filled"
+                     Color="Color.Secondary" OnClick="CloseList"/>
+    </MudTooltip>
+  </MudPaper>
+</div>
+
+<MudGrid Spacing="5" Justify="Justify.FlexStart">
+  @foreach (var geminiRecipe in _recipes)
+  {
+    <MudItem xs="4">
+      <RecipeListCard Recipe="@geminiRecipe"/>
+    </MudItem>
+  }
+</MudGrid>
+
+@code {
+  [Parameter] public RecipeBuilder Recipe { get; set; } = new();
+  [Parameter] public EventCallback OnListClose { get; set; }
+
+  private bool _shouldRender;
+  private Recipe[] _recipes = [];
+
+  async void CloseList()
+  {
+    _shouldRender = false;
+    await OnListClose.InvokeAsync();
+  }
+
+  protected override bool ShouldRender() => _shouldRender;
+
+  protected override async Task OnInitializedAsync()
+  {
+    _shouldRender = true;
+    await GenerateRecipes();
+  }
+
+  private async Task GenerateRecipes()
+  {
+    var geminiApiKey = Config["Gemini:ApiKey"] ?? throw new Exception("GeminiApiKey not set");
+    var client = ClientFactory.CreateClient("Gemini");
+
+    _recipes = new Recipe[5];
+
+    var requestBody = new RecipesRequestBodySchema
+    {
+      Contents = [new() { Role = "user", Parts = [new() { Text = BuildGeminiInput() }] }],
+      SystemInstruction = new(),
+      GenerationConfig = new()
+    };
+
+    var response = await client.PostAsJsonAsync($"v1beta/models/gemini-1.5-pro-002:generateContent?key={geminiApiKey}",
+      requestBody);
+
+    response.EnsureSuccessStatusCode();
+
+    var responseJson = await response.Content.ReadFromJsonAsync<RecipeResponseSchema>();
+
+    _recipes = responseJson!.Candidates[0].Content.Parts[0].Text.Recipes;
+    StateHasChanged();
+  }
+
+  private string BuildGeminiInput()
+  {
+    return $"Meals: {string.Join(", ", Recipe.Meals)}. Ingredients: {String.Join(", ", Recipe.Ingredients)}";
+  }
+
+}
